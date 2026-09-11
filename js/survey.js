@@ -550,12 +550,6 @@ async function submitSurvey() {
         salesperson_id: mySalesId,
         is_active: true
       };
-      
-      try {
-        await PVT.db.from("customers").upsert(farmerCust, { onConflict: "id" });
-      } catch (upsertErr) {
-        console.warn("Farmer placeholder customer creation notice:", upsertErr);
-      }
       MY_CUSTOMERS.push(farmerCust);
     }
     CUSTOMER = farmerCust;
