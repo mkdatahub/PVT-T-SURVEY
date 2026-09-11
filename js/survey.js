@@ -96,8 +96,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Sort alphabetically by store name
     MY_CUSTOMERS.sort((a, b) => (a.client_name || "").localeCompare(b.client_name || "", "th"));
 
-    // 3. Resolve current selected customer (from URL or first in list)
+    // 3. Resolve current selected customer & respondent type (from URL)
     const rawCustomerId = PVT.params().get("customer");
+    const rawType = PVT.params().get("type");
+    const rawProvince = PVT.params().get("province");
+
     if (rawCustomerId) {
       const resolved = await PVT.resolveCustomer(rawCustomerId);
       if (resolved) {
@@ -108,17 +111,44 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
 
+    // Determine and set initial Respondent Type
+    const typeSelect = document.getElementById("respondent-type");
+    if (rawType === "farmer" || rawType === "dealer") {
+      if (typeSelect) typeSelect.value = rawType;
+    } else if (CUSTOMER) {
+      if (CUSTOMER.client_id && CUSTOMER.client_id.startsWith("FARMER-")) {
+        if (typeSelect) typeSelect.value = "farmer";
+      } else {
+        if (typeSelect) typeSelect.value = "dealer";
+      }
+    }
+
+    if (rawProvince) {
+      const farmerProvSelect = document.getElementById("farmer-province");
+      if (farmerProvSelect) farmerProvSelect.value = rawProvince;
+    }
+
     // 4. Load Products
     PRODUCTS_ALL = await PVT.loadProducts();
 
-    renderHeader();
     renderCampaignSelect();
     renderProvinceFilter();
     applyCustomerFilters(false);
+    handleRespondentTypeChange();
+    renderHeader();
     await fetchCompletedProductsForSelectedCustomer();
     bindEvents();
     syncMetadataHighlights();
-    handleRespondentTypeChange();
+
+    // If customer was loaded from URL, smoothly focus product selector
+    if (CUSTOMER && document.getElementById("product-select")) {
+      setTimeout(() => {
+        const prodEl = document.getElementById("product-select");
+        if (prodEl) {
+          prodEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 200);
+    }
 
   } catch (err) {
     document.getElementById("survey-area").innerHTML = `<div class="notice error">${PVT.escapeHtml(err.message)}</div>`;
@@ -252,6 +282,11 @@ function applyCustomerFilters(autoSelectFirst = true) {
     return true;
   });
 
+  // CRITICAL: If a CUSTOMER is selected (e.g. from URL), make sure it is in FILTERED_CUSTOMERS
+  if (CUSTOMER && !FILTERED_CUSTOMERS.some(c => c.id === CUSTOMER.id)) {
+    FILTERED_CUSTOMERS.unshift(CUSTOMER);
+  }
+
   renderCustomerSelect(autoSelectFirst);
 }
 
@@ -275,7 +310,7 @@ function renderCustomerSelect(autoSelectFirst) {
   if (!isCurrentInList && autoSelectFirst && FILTERED_CUSTOMERS.length > 0) {
     CUSTOMER = FILTERED_CUSTOMERS[0];
     renderHeader();
-    history.replaceState(null, "", `survey.html?customer=${encodeURIComponent(CUSTOMER.id)}`);
+    history.replaceState(null, "", `survey.html?customer=${encodeURIComponent(CUSTOMER.id)}&type=dealer`);
   }
 
   const isPlaceholderSelected = !CUSTOMER ? "selected" : "";
@@ -293,6 +328,9 @@ function renderCustomerSelect(autoSelectFirst) {
   }).join("");
 
   custSelect.innerHTML = optionsHtml;
+  if (CUSTOMER) {
+    custSelect.value = CUSTOMER.id;
+  }
 }
 
 function renderProducts() {
@@ -352,16 +390,23 @@ function handleRespondentTypeChange() {
   if (type === "dealer") {
     if (dealerContainer) dealerContainer.classList.remove("hidden");
     if (farmerContainer) farmerContainer.classList.add("hidden");
+    const custSelect = document.getElementById("customer-select");
+    if (!CUSTOMER && custSelect && custSelect.value) {
+      CUSTOMER = MY_CUSTOMERS.find(c => c.id === custSelect.value) || null;
+    }
   } else if (type === "farmer") {
     if (dealerContainer) dealerContainer.classList.add("hidden");
     if (farmerContainer) farmerContainer.classList.remove("hidden");
-    CUSTOMER = null;
+    if (CUSTOMER && !CUSTOMER.client_id?.startsWith("FARMER-")) {
+      CUSTOMER = null;
+    }
   } else {
     if (dealerContainer) dealerContainer.classList.add("hidden");
     if (farmerContainer) farmerContainer.classList.add("hidden");
     CUSTOMER = null;
   }
   renderHeader();
+  renderProducts();
 }
 
 function bindEvents() {
@@ -676,16 +721,28 @@ async function submitSurvey() {
     }
 
     // Show success screen
+    const nextUrl = respondentType === "farmer"
+      ? `survey.html?type=farmer${CUSTOMER?.province_raw ? `&province=${encodeURIComponent(CUSTOMER.province_raw)}` : ""}`
+      : `survey.html?customer=${encodeURIComponent(CUSTOMER.id)}&type=dealer`;
+
+    const nextBtnLabel = respondentType === "farmer"
+      ? "กรอกสินค้าอื่นให้เกษตรกรต่อ"
+      : "กรอกสินค้าอื่นให้ร้านนี้ต่อ";
+
+    const subtitle = respondentType === "farmer"
+      ? `เกษตรกร: <b>${PVT.escapeHtml(CUSTOMER.client_name)}</b>`
+      : `ร้าน: <b>${PVT.escapeHtml(CUSTOMER.client_name)}</b> (${PVT.escapeHtml(CUSTOMER.province_normalized || CUSTOMER.province_raw || "")})`;
+
     document.getElementById("survey-area").innerHTML = `<div class="card" style="text-align:center;padding:34px">
       <div style="color:var(--brand);margin-bottom:14px;display:flex;justify-content:center">
         <svg class="pvt-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
       </div>
       <h2>บันทึกแบบสอบถามเรียบร้อย</h2>
-      <p class="muted" style="margin:8px 0 16px">ร้าน: <b>${PVT.escapeHtml(CUSTOMER.client_name)}</b> (${PVT.escapeHtml(CUSTOMER.province_normalized || CUSTOMER.province_raw || "")})</p>
+      <p class="muted" style="margin:8px 0 16px">${subtitle}</p>
       <div class="actions" style="justify-content:center;margin-top:20px;gap:12px;flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="location.href='survey.html?customer=${encodeURIComponent(CUSTOMER.id)}'" style="background-color: #000c85; font-weight: normal; display:inline-flex;align-items:center;gap:6px">
+        <button class="btn btn-primary" onclick="location.href='${nextUrl}'" style="background-color: #000c85; font-weight: normal; display:inline-flex;align-items:center;gap:6px">
           <svg class="pvt-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-          <span>กรอกสินค้าอื่นให้ร้านนี้ต่อ</span>
+          <span>${nextBtnLabel}</span>
         </button>
         <button class="btn btn-secondary" onclick="location.href='survey.html'" style="border-width: 0px; border-style: solid; display:inline-flex;align-items:center;gap:6px">
           <svg class="pvt-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
