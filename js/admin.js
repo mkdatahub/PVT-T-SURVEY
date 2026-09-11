@@ -156,7 +156,7 @@ async function pollNewResponses() {
     // Poll the latest 20 responses
     const { data: latest, error } = await PVT.db
       .from("response_overview")
-      .select("id, campaign_id, campaign_name, client_name, customer_name, respondent_name, submitted_at, nps_score")
+      .select("id, campaign_id, campaign_name, client_name, respondent_name, submitted_at, nps_score")
       .in("campaign_id", trackedIds)
       .order("submitted_at", { ascending: false })
       .limit(20);
