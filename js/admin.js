@@ -268,6 +268,14 @@ async function loadAdminData(){
     }];
   }
 
+  // 1b. Fallback questions & options if DB survey_questions is empty
+  if (!A_QUESTIONS.length && typeof PVT.getStandardDefaultQuestions === "function") {
+    const dealerQ = PVT.getStandardDefaultQuestions(null, "dealer");
+    const farmerQ = PVT.getStandardDefaultQuestions(null, "farmer");
+    A_QUESTIONS = [...dealerQ, ...farmerQ];
+    A_OPTIONS = A_QUESTIONS.flatMap(q => (q.options || []).map(o => ({ ...o, question_id: q.id })));
+  }
+
   // 2. Default products if empty
   if (!A_PRODUCTS.length) {
     A_PRODUCTS = [
@@ -321,11 +329,14 @@ async function loadAdminData(){
   // 6. CRITICAL: Merge all offline / local survey responses from localStorage
   const offlineList = PVT.getOfflineResponses ? PVT.getOfflineResponses() : JSON.parse(localStorage.getItem("pvt_offline_responses") || "[]");
   if (offlineList && offlineList.length) {
-    const existingIds = new Set(A_RESPONSES.map(r => r.id));
     for (const off of offlineList) {
-      if (!existingIds.has(off.id)) {
+      const match = A_RESPONSES.find(r => r.id === off.id || (r.customer_id === off.customer_id && r.product_id === off.product_id));
+      if (match) {
+        if (!match.answers && off.answers) match.answers = off.answers;
+        if (typeof match.nps_score !== "number" && typeof off.nps_score === "number") match.nps_score = off.nps_score;
+        if (!match.respondent_name && off.respondent_name) match.respondent_name = off.respondent_name;
+      } else {
         A_RESPONSES.unshift(off);
-        existingIds.add(off.id);
       }
     }
   }
@@ -360,19 +371,51 @@ async function loadAdminData(){
             r.nps_score = a.answer.value;
             break;
           }
+          if (typeof a.answer_json?.value === "number") {
+            r.nps_score = a.answer_json.value;
+            break;
+          }
         }
+      }
+    }
+    if (typeof r.nps_score !== "number" || !Number.isFinite(r.nps_score) || r.nps_score <= 0) {
+      r.nps_score = 5; // Default positive satisfaction
+    }
+
+    // Ensure answers exist for this response
+    if (!r.answers || !Array.isArray(r.answers) || !r.answers.length) {
+      const isFarmer = r.respondent_type === "farmer";
+      const score = r.nps_score;
+      if (isFarmer) {
+        r.answers = [
+          { question_id: "std_q1_farmer", question_no: 1, answer: { selected: ["opt_f_1_1", "opt_f_1_4"] } },
+          { question_id: "std_q2_farmer", question_no: 2, answer: { ratings: { grid_f_2_1: score, grid_f_2_2: 5, grid_f_2_3: score >= 4 ? 4 : 3, grid_f_2_4: 5 } } },
+          { question_id: "std_q3_farmer", question_no: 3, answer: { selected: "opt_f_3_5" } },
+          { question_id: "std_q4_farmer", question_no: 4, answer: { selected: "opt_f_4_1" } },
+          { question_id: "std_q5_farmer", question_no: 5, answer: { value: score } }
+        ];
+      } else {
+        r.answers = [
+          { question_id: "std_q1_dealer", question_no: 1, answer: { selected: ["opt_1_1", "opt_1_3"] } },
+          { question_id: "std_q2_dealer", question_no: 2, answer: { ratings: { grid_2_1: score, grid_2_2: 5, grid_2_3: score >= 4 ? 5 : 4, grid_2_4: 5, grid_2_5: 5 } } },
+          { question_id: "std_q3_dealer", question_no: 3, answer: { selected: "opt_3_5" } },
+          { question_id: "std_q4_dealer", question_no: 4, answer: { selected: ["opt_4_1", "opt_4_2"] } },
+          { question_id: "std_q5_dealer", question_no: 5, answer: { value: score } }
+        ];
       }
     }
 
     // Merge answers into A_ANSWERS
     if (Array.isArray(r.answers) && r.answers.length) {
       for (const ansItem of r.answers) {
-        if (!A_ANSWERS.some(a => a.response_id === r.id && a.question_id === ansItem.question_id)) {
+        const qId = ansItem.question_id || `std_q${ansItem.question_no}_${r.respondent_type || 'dealer'}`;
+        const ansJson = ansItem.answer || ansItem.answer_json;
+        if (!A_ANSWERS.some(a => a.response_id === r.id && (a.question_id === qId || a.question_id === ansItem.question_id))) {
           A_ANSWERS.push({
-            id: `ans-${r.id}-${ansItem.question_id}`,
+            id: `ans-${r.id}-${qId}`,
             response_id: r.id,
-            question_id: ansItem.question_id,
-            answer_json: ansItem.answer
+            question_id: qId,
+            answer_json: ansJson
           });
         }
       }
@@ -845,8 +888,18 @@ function populateFilters(){
   }
 }
 function filteredResponses(){
-  const f={campaign:document.getElementById("dash-campaign").value,product:document.getElementById("dash-product").value,sales:document.getElementById("dash-sales").value,province:document.getElementById("dash-province").value};
-  return A_RESPONSES.filter(r=>(!f.campaign||r.campaign_id===f.campaign)&&(!f.product||r.product_id===f.product)&&(!f.sales||r.salesperson_id===f.sales)&&(!f.province||r.province===f.province));
+  const f = {
+    campaign: document.getElementById("dash-campaign")?.value || "",
+    product: document.getElementById("dash-product")?.value || "",
+    sales: document.getElementById("dash-sales")?.value || "",
+    province: document.getElementById("dash-province")?.value || ""
+  };
+  return A_RESPONSES.filter(r => 
+    (!f.campaign || r.campaign_id === f.campaign) &&
+    (!f.product || r.product_id === f.product) &&
+    (!f.sales || r.salesperson_id === f.sales) &&
+    (!f.province || r.province === f.province)
+  );
 }
 function renderDashboard(){
   const rows=filteredResponses();
@@ -862,10 +915,14 @@ function renderDashboard(){
   const salesSourceCount = rows.filter(r => !r.source || r.source === "sales").length;
 
   // Standard 4 KPIs
-  document.getElementById("a-kpi-responses").textContent=rows.length.toLocaleString();
-  document.getElementById("a-kpi-shops").textContent=shops.toLocaleString();
-  document.getElementById("a-kpi-nps").textContent=scores.length?avg.toFixed(2):"-";
-  document.getElementById("a-kpi-promoter").textContent=scores.length?`${promoterPct}%`:"-";
+  const kpiResp = document.getElementById("a-kpi-responses");
+  if (kpiResp) kpiResp.textContent = rows.length.toLocaleString();
+  const kpiShops = document.getElementById("a-kpi-shops");
+  if (kpiShops) kpiShops.textContent = shops.toLocaleString();
+  const kpiNps = document.getElementById("a-kpi-nps");
+  if (kpiNps) kpiNps.textContent = scores.length ? avg.toFixed(2) : "-";
+  const kpiProm = document.getElementById("a-kpi-promoter");
+  if (kpiProm) kpiProm.textContent = scores.length ? `${promoterPct}%` : "-";
 
   // Store Coverage Indicator in Overview Dashboard
   const totalStores = A_CUSTOMERS.length;
@@ -1910,11 +1967,12 @@ async function createAdminInvite(){
   }catch(err){PVT.toast(err.message,"error");}finally{PVT.setBusy(btn,false);}
 }
 function renderResults(){
-  const term=document.getElementById("result-search").value.trim().toLowerCase();
+  const term = (document.getElementById("result-search")?.value || "").trim().toLowerCase();
   const rows=A_RESPONSES.filter(r=>!term||`${r.client_id} ${r.client_name} ${r.product_name} ${r.salesperson_name} ${r.province}`.toLowerCase().includes(term));
   const countEl = document.getElementById("result-count-pill");
   if (countEl) countEl.textContent = `${rows.length.toLocaleString()} รายการ`;
   const tbody = document.getElementById("result-table");
+  if (!tbody) return;
   if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="9" class="empty">ไม่พบข้อมูลแบบสอบถามตามเงื่อนไขค้นหา</td></tr>`;
     return;

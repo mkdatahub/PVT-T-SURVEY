@@ -181,7 +181,7 @@ window.PVT = window.PVT || {};
     if (respondentType === "farmer") {
       return [
         {
-          id: `std_q1_farmer_${Date.now()}`,
+          id: `std_q1_farmer`,
           product_id: productId || "all",
           respondent_type: "farmer",
           question_no: 1,
@@ -201,7 +201,7 @@ window.PVT = window.PVT || {};
           ]
         },
         {
-          id: `std_q2_farmer_${Date.now()}`,
+          id: `std_q2_farmer`,
           product_id: productId || "all",
           respondent_type: "farmer",
           question_no: 2,
@@ -218,7 +218,7 @@ window.PVT = window.PVT || {};
           ]
         },
         {
-          id: `std_q3_farmer_${Date.now()}`,
+          id: `std_q3_farmer`,
           product_id: productId || "all",
           respondent_type: "farmer",
           question_no: 3,
@@ -237,7 +237,7 @@ window.PVT = window.PVT || {};
           ]
         },
         {
-          id: `std_q4_farmer_${Date.now()}`,
+          id: `std_q4_farmer`,
           product_id: productId || "all",
           respondent_type: "farmer",
           question_no: 4,
@@ -255,7 +255,7 @@ window.PVT = window.PVT || {};
           ]
         },
         {
-          id: `std_q5_farmer_${Date.now()}`,
+          id: `std_q5_farmer`,
           product_id: productId || "all",
           respondent_type: "farmer",
           question_no: 5,
@@ -275,7 +275,7 @@ window.PVT = window.PVT || {};
 
     return [
       {
-        id: `std_q1_${Date.now()}`,
+        id: `std_q1_dealer`,
         product_id: productId || "all",
         respondent_type: respondentType,
         question_no: 1,
@@ -295,7 +295,7 @@ window.PVT = window.PVT || {};
         ]
       },
       {
-        id: `std_q2_${Date.now()}`,
+        id: `std_q2_dealer`,
         product_id: productId || "all",
         respondent_type: respondentType,
         question_no: 2,
@@ -313,7 +313,7 @@ window.PVT = window.PVT || {};
         ]
       },
       {
-        id: `std_q3_${Date.now()}`,
+        id: `std_q3_dealer`,
         product_id: productId || "all",
         respondent_type: respondentType,
         question_no: 3,
@@ -332,7 +332,7 @@ window.PVT = window.PVT || {};
         ]
       },
       {
-        id: `std_q4_${Date.now()}`,
+        id: `std_q4_dealer`,
         product_id: productId || "all",
         respondent_type: respondentType,
         question_no: 4,
@@ -349,6 +349,22 @@ window.PVT = window.PVT || {};
           { id: "opt_4_4", option_key: "contractor", option_text: "ช่างรับเหมา / ระบบชลประทานเกษตร", sort_order: 4, is_other: false },
           { id: "opt_4_5", option_key: "other", option_text: "อื่นๆ โปรดระบุ", sort_order: 5, is_other: true }
         ]
+      },
+      {
+        id: `std_q5_dealer`,
+        product_id: productId || "all",
+        respondent_type: respondentType,
+        question_no: 5,
+        prompt: "โอกาสที่ท่านจะแนะนำผลิตภัณฑ์ตราต้นไม้ ให้แก่ร้านค้าหรือพันธมิตรทางการค้าท่านอื่น (1 = น้อยที่สุด, 5 = มากที่สุด)",
+        question_type: "scale",
+        required: true,
+        scale_min: 1,
+        scale_max: 5,
+        scale_min_label: "ไม่แนะนำแน่นอน",
+        scale_mid_label: "ปานกลาง",
+        scale_max_label: "แนะนำแน่นอน",
+        analysis_hint: "คำนวณ Net Promoter Score (NPS) ของกลุ่มร้านค้าตัวแทนจำหน่าย",
+        sort_order: 5
       }
     ];
   };

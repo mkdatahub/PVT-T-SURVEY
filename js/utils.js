@@ -124,6 +124,31 @@ PVT.resolveCustomer = async (identifier) => {
   if (!identifier) return null;
   const str = String(identifier).trim();
 
+  // 0. Check session storage and memory objects first for instant resolution
+  try {
+    const saved = sessionStorage.getItem("pvt_active_customer");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && (parsed.id === str || parsed.client_id === str || parsed.client_name === str)) {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+
+  if (typeof window !== "undefined") {
+    if (window.CUSTOMER && (window.CUSTOMER.id === str || window.CUSTOMER.client_id === str || window.CUSTOMER.client_name === str)) {
+      return window.CUSTOMER;
+    }
+    if (Array.isArray(window.MY_CUSTOMERS)) {
+      const found = window.MY_CUSTOMERS.find(c => c.id === str || c.client_id === str || c.client_name === str);
+      if (found) return found;
+    }
+    if (Array.isArray(window.A_CUSTOMERS)) {
+      const found = window.A_CUSTOMERS.find(c => c.id === str || c.client_id === str || c.client_name === str);
+      if (found) return found;
+    }
+  }
+
   // 1. Try DB lookup if valid UUID
   if (PVT.isUuid(str) && PVT.db) {
     try {

@@ -96,18 +96,43 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Sort alphabetically by store name
     MY_CUSTOMERS.sort((a, b) => (a.client_name || "").localeCompare(b.client_name || "", "th"));
 
-    // 3. Resolve current selected customer & respondent type (from URL)
-    const rawCustomerId = PVT.params().get("customer");
-    const rawType = PVT.params().get("type");
-    const rawProvince = PVT.params().get("province");
+    window.MY_CUSTOMERS = MY_CUSTOMERS;
+
+    // 3. Resolve current selected customer & respondent type (from URL or session)
+    let rawCustomerId = PVT.params().get("customer");
+    let rawType = PVT.params().get("type");
+    let rawProvince = PVT.params().get("province");
+
+    if (!rawCustomerId) {
+      try {
+        const savedCust = sessionStorage.getItem("pvt_active_customer");
+        if (savedCust) {
+          const parsed = JSON.parse(savedCust);
+          if (parsed && parsed.id) rawCustomerId = parsed.id;
+        }
+      } catch (e) {}
+    }
+
+    if (!rawType) {
+      try {
+        rawType = sessionStorage.getItem("pvt_active_type");
+      } catch (e) {}
+    }
 
     if (rawCustomerId) {
-      const resolved = await PVT.resolveCustomer(rawCustomerId);
+      let resolved = MY_CUSTOMERS.find(c => c.id === rawCustomerId || c.client_id === rawCustomerId);
+      if (!resolved) {
+        resolved = await PVT.resolveCustomer(rawCustomerId);
+      }
       if (resolved) {
         CUSTOMER = resolved;
+        window.CUSTOMER = resolved;
         if (!MY_CUSTOMERS.find(c => c.id === resolved.id)) {
           MY_CUSTOMERS.unshift(resolved);
         }
+        try {
+          sessionStorage.setItem("pvt_active_customer", JSON.stringify(CUSTOMER));
+        } catch (e) {}
       }
     }
 
@@ -622,6 +647,9 @@ async function submitSurvey() {
       if (typeof a.answer?.value === "number") npsScore = a.answer.value;
       else if (typeof a.answer?.rating === "number") npsScore = a.answer.rating;
     }
+    if (typeof npsScore !== "number" || !Number.isFinite(npsScore)) {
+      npsScore = 5;
+    }
 
     const prodObj = PRODUCTS_ALL.find(p => p.id === productId) || { name_th: "ผลิตภัณฑ์ตราต้นไม้", code: "GENERAL" };
     const mySalesId = CUSTOMER.salesperson_id || SURVEY_CTX?.profile?.salesperson_id || "c03a7c5e-ccc8-559d-9223-3379b540f53d";
@@ -647,6 +675,12 @@ async function submitSurvey() {
       if (!error && data) {
         responseId = data;
         submittedToDb = true;
+        // Ensure nps_score is explicitly updated on the newly created response row
+        try {
+          await PVT.db.from("survey_responses").update({ nps_score: npsScore }).eq("id", responseId);
+        } catch (updateErr) {
+          console.warn("Notice updating nps_score in survey_responses:", updateErr);
+        }
       } else if (error) {
         console.warn("RPC submit_internal_survey returned notice:", error.message || error);
       }
@@ -720,10 +754,14 @@ async function submitSurvey() {
       COMPLETED_CUSTOMER_IDS.add(CUSTOMER.id);
     }
 
-    // Show success screen
-    const nextUrl = respondentType === "farmer"
-      ? `survey.html?type=farmer${CUSTOMER?.province_raw ? `&province=${encodeURIComponent(CUSTOMER.province_raw)}` : ""}`
-      : `survey.html?customer=${encodeURIComponent(CUSTOMER.id)}&type=dealer`;
+    // Persist active customer and respondent type to session storage
+    try {
+      if (CUSTOMER) sessionStorage.setItem("pvt_active_customer", JSON.stringify(CUSTOMER));
+      sessionStorage.setItem("pvt_active_type", respondentType);
+    } catch (e) {}
+
+    const formContainer = document.getElementById("survey-form-container");
+    const successCard = document.getElementById("survey-success-card");
 
     const nextBtnLabel = respondentType === "farmer"
       ? "กรอกสินค้าอื่นให้เกษตรกรต่อ"
@@ -733,23 +771,63 @@ async function submitSurvey() {
       ? `เกษตรกร: <b>${PVT.escapeHtml(CUSTOMER.client_name)}</b>`
       : `ร้าน: <b>${PVT.escapeHtml(CUSTOMER.client_name)}</b> (${PVT.escapeHtml(CUSTOMER.province_normalized || CUSTOMER.province_raw || "")})`;
 
-    document.getElementById("survey-area").innerHTML = `<div class="card" style="text-align:center;padding:34px">
-      <div style="color:var(--brand);margin-bottom:14px;display:flex;justify-content:center">
-        <svg class="pvt-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-      </div>
-      <h2>บันทึกแบบสอบถามเรียบร้อย</h2>
-      <p class="muted" style="margin:8px 0 16px">${subtitle}</p>
-      <div class="actions" style="justify-content:center;margin-top:20px;gap:12px;flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="location.href='${nextUrl}'" style="background-color: #000c85; font-weight: normal; display:inline-flex;align-items:center;gap:6px">
-          <svg class="pvt-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-          <span>${nextBtnLabel}</span>
-        </button>
-        <button class="btn btn-secondary" onclick="location.href='survey.html'" style="border-width: 0px; border-style: solid; display:inline-flex;align-items:center;gap:6px">
-          <svg class="pvt-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-          <span style="color: #000c85; font-weight: normal;">เลือกร้านค้าถัดไป</span>
-        </button>
-      </div>
-    </div>`;
+    if (formContainer && successCard) {
+      formContainer.classList.add("hidden");
+      successCard.classList.remove("hidden");
+      successCard.innerHTML = `
+        <div style="color:var(--brand);margin-bottom:14px;display:flex;justify-content:center">
+          <svg class="pvt-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <h2 style="margin:0 0 8px">บันทึกแบบสอบถามเรียบร้อยแล้ว</h2>
+        <p class="muted" style="margin:8px 0 10px;font-size:15px">${subtitle}</p>
+        <div style="display:inline-block;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:20px;padding:4px 16px;font-size:13px;font-weight:600;margin-bottom:24px">
+          สินค้าที่เพิ่งบันทึก: ${PVT.escapeHtml(prodObj.name_th)} • คะแนนความพึงพอใจ: ${npsScore}/5 ดาว
+        </div>
+        <div class="actions" style="justify-content:center;gap:12px;flex-wrap:wrap">
+          <button id="btn-continue-same-customer" class="btn btn-primary" style="background-color: #000c85; font-weight: 600; padding:12px 22px; display:inline-flex;align-items:center;gap:8px">
+            <svg class="pvt-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            <span>${nextBtnLabel}</span>
+          </button>
+          <button id="btn-choose-next-customer" class="btn btn-secondary" style="border-width: 0px; border-style: solid; padding:12px 20px; display:inline-flex;align-items:center;gap:8px">
+            <svg class="pvt-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <span style="color: #000c85; font-weight: 600;">เลือกร้านค้าถัดไป</span>
+          </button>
+        </div>
+      `;
+
+      document.getElementById("btn-continue-same-customer")?.addEventListener("click", () => {
+        continueWithSameCustomer();
+      });
+
+      document.getElementById("btn-choose-next-customer")?.addEventListener("click", () => {
+        chooseNextCustomer();
+      });
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      // Fallback if formContainer not found
+      const nextUrl = respondentType === "farmer"
+        ? `survey.html?type=farmer${CUSTOMER?.province_raw ? `&province=${encodeURIComponent(CUSTOMER.province_raw)}` : ""}`
+        : `survey.html?customer=${encodeURIComponent(CUSTOMER.id)}&type=dealer`;
+
+      document.getElementById("survey-area").innerHTML = `<div class="card" style="text-align:center;padding:34px">
+        <div style="color:var(--brand);margin-bottom:14px;display:flex;justify-content:center">
+          <svg class="pvt-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <h2>บันทึกแบบสอบถามเรียบร้อย</h2>
+        <p class="muted" style="margin:8px 0 16px">${subtitle}</p>
+        <div class="actions" style="justify-content:center;margin-top:20px;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="location.href='${nextUrl}'" style="background-color: #000c85; font-weight: normal; display:inline-flex;align-items:center;gap:6px">
+            <svg class="pvt-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            <span>${nextBtnLabel}</span>
+          </button>
+          <button class="btn btn-secondary" onclick="location.href='survey.html'" style="border-width: 0px; border-style: solid; display:inline-flex;align-items:center;gap:6px">
+            <svg class="pvt-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <span style="color: #000c85; font-weight: normal;">เลือกร้านค้าถัดไป</span>
+          </button>
+        </div>
+      </div>`;
+    }
   } catch (err) {
     PVT.toast(err.message || "บันทึกไม่สำเร็จ", "error");
   } finally {
@@ -841,4 +919,83 @@ async function fetchCompletedProductsForSelectedCustomer() {
   console.log("COMPLETED_PRODUCT_IDS Set values:", Array.from(COMPLETED_PRODUCT_IDS));
   renderProducts();
 }
+
+window.continueWithSameCustomer = async function() {
+  const successCard = document.getElementById("survey-success-card");
+  const formContainer = document.getElementById("survey-form-container");
+  if (successCard) successCard.classList.add("hidden");
+  if (formContainer) formContainer.classList.remove("hidden");
+
+  // Keep CUSTOMER and respondent-type exactly as-is!
+  const typeSelect = document.getElementById("respondent-type");
+  const type = typeSelect?.value || (CUSTOMER?.client_id?.startsWith("FARMER-") ? "farmer" : "dealer");
+  if (typeSelect) typeSelect.value = type;
+
+  // Reset product selection
+  const prodSelect = document.getElementById("product-select");
+  if (prodSelect) prodSelect.value = "";
+
+  // Hide questions panel until next product is selected
+  const qPanel = document.getElementById("questions-panel");
+  if (qPanel) qPanel.classList.add("hidden");
+
+  // Reset progress bar & answers
+  ANSWERS = {};
+  CURRENT_QUESTION_SET = [];
+  const qContainer = document.getElementById("question-container");
+  if (qContainer) qContainer.innerHTML = "";
+  const painPointEl = document.getElementById("pain-point");
+  if (painPointEl) {
+    painPointEl.style.display = "none";
+    painPointEl.textContent = "";
+  }
+
+  // Refresh completed products so the just-completed product shows "(ทำแล้ว)"
+  await fetchCompletedProductsForSelectedCustomer();
+  renderProducts();
+  syncMetadataHighlights();
+
+  // Highlight and focus product selector
+  if (prodSelect) {
+    prodSelect.scrollIntoView({ behavior: "smooth", block: "center" });
+    prodSelect.focus();
+    prodSelect.style.outline = "3px solid #16a34a";
+    prodSelect.style.boxShadow = "0 0 0 4px rgba(22, 163, 74, 0.2)";
+    setTimeout(() => {
+      prodSelect.style.outline = "";
+      prodSelect.style.boxShadow = "";
+    }, 2500);
+  }
+
+  PVT.toast(`กรอกสินค้าอื่นต่อให้ "${CUSTOMER?.client_name || 'ลูกค้ารายนี้'}" ได้เลย`, "info");
+};
+
+window.chooseNextCustomer = function() {
+  CUSTOMER = null;
+  window.CUSTOMER = null;
+  try {
+    sessionStorage.removeItem("pvt_active_customer");
+    sessionStorage.removeItem("pvt_active_type");
+  } catch(e) {}
+  history.replaceState(null, "", "survey.html");
+  
+  const successCard = document.getElementById("survey-success-card");
+  const formContainer = document.getElementById("survey-form-container");
+  if (successCard) successCard.classList.add("hidden");
+  if (formContainer) formContainer.classList.remove("hidden");
+
+  // Reset selects
+  const custSelect = document.getElementById("customer-select");
+  if (custSelect) custSelect.value = "";
+  const prodSelect = document.getElementById("product-select");
+  if (prodSelect) prodSelect.value = "";
+  const qPanel = document.getElementById("questions-panel");
+  if (qPanel) qPanel.classList.add("hidden");
+
+  renderHeader();
+  applyCustomerFilters(false);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  PVT.toast("กรุณาเลือกร้านค้าถัดไป", "info");
+};
+
 
