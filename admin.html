@@ -608,7 +608,7 @@
             <div
               id="kpi-panel-usp"
               class="summary-kpi-panel summary-kpi-clickable"
-              title="คลิกเพื่อเลื่อนลงไปดูรายละเอียดสถิติเหตุผลที่ลูกค้าเลือกเรา"
+              title="คลิกเพื่อเปิดดู Voice of Customer & วิเคราะห์จุดเด่น USP"
             >
               <div>
                 <div class="summary-kpi-top-row">
@@ -658,7 +658,7 @@
                     gap: 3px;
                   "
                 >
-                  <span>ดูผลแยกข้อ 1</span> →
+                  <span>ดู Insights</span> →
                 </span>
               </div>
             </div>
@@ -676,8 +676,11 @@
           "
         >
           <div class="field" style="flex: 1; min-width: 140px">
-            <label>Campaign</label
-            ><select id="dash-campaign" class="select"></select>
+            <label style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+              <span>Campaign</span>
+              <span id="dash-campaign-status-badge" class="pill success" style="font-size: 10.5px; padding: 1px 7px; white-space: nowrap; font-weight: 700;">เปิดใช้งานอยู่</span>
+            </label>
+            <select id="dash-campaign" class="select"></select>
           </div>
           <div class="field" style="flex: 1; min-width: 140px">
             <label>สินค้า</label

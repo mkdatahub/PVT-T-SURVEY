@@ -268,6 +268,12 @@ async function loadAdminData(){
     }];
   }
 
+  // Sort campaigns: Active campaigns first, then newest start_date
+  A_CAMPAIGNS.sort((a, b) => {
+    if (a.is_active !== b.is_active) return a.is_active ? -1 : 1;
+    return (b.start_date || "").localeCompare(a.start_date || "");
+  });
+
   // 1b. Fallback questions & options if DB survey_questions is empty
   if (!A_QUESTIONS.length && typeof PVT.getStandardDefaultQuestions === "function") {
     const dealerQ = PVT.getStandardDefaultQuestions(null, "dealer");
@@ -496,6 +502,10 @@ function bindAdminEvents(){
     const el = document.getElementById(id);
     if (el) {
       el.addEventListener("change", () => {
+        if (id === "dash-campaign") {
+          el.dataset.userChosen = "true";
+          updateCampaignStatusBadge();
+        }
         renderDashboard();
         renderResults();
       });
@@ -629,17 +639,7 @@ function bindAdminEvents(){
 
   const kpiUspEl = document.getElementById("kpi-panel-usp");
   if (kpiUspEl) {
-    kpiUspEl.addEventListener("click", () => {
-      const target = document.getElementById("dynamic-question-insights-container");
-      if (target) {
-        target.scrollIntoView({ behavior: "smooth" });
-        const firstCard = target.querySelector(".dynamic-q-card");
-        if (firstCard) {
-          firstCard.style.outline = "2px solid var(--brand)";
-          setTimeout(() => { firstCard.style.outline = ""; }, 2000);
-        }
-      }
-    });
+    kpiUspEl.addEventListener("click", () => openDashboardInsights("วิเคราะห์เจาะลึกปัจจัยหลักที่ลูกค้าเลือกเรา (Top USPs)", "Top USP & Strengths KPI"));
   }
 
   // Secondary 4-grid KPI cards
@@ -787,6 +787,38 @@ async function generateSampleData() {
 function renderAll(){
   populateFilters(); renderDashboard(); renderCampaigns(); renderAdminCustomers(); renderResults(); renderUsers(); renderComparison();
 }
+function updateCampaignStatusBadge(){
+  const dashCampEl = document.getElementById("dash-campaign");
+  const badge = document.getElementById("dash-campaign-status-badge");
+  if (!dashCampEl || !badge) return;
+  const val = dashCampEl.value;
+  if (!val) {
+    badge.textContent = "ภาพรวมทั้งหมด";
+    badge.className = "pill";
+    badge.style.background = "#f1f5f9";
+    badge.style.color = "#475569";
+    badge.style.border = "1px solid #cbd5e1";
+    badge.style.display = "inline-flex";
+  } else {
+    const camp = A_CAMPAIGNS.find(c => c.id === val);
+    if (camp && camp.is_active) {
+      badge.textContent = "เปิดใช้งานอยู่";
+      badge.className = "pill success";
+      badge.style.background = "";
+      badge.style.color = "";
+      badge.style.border = "";
+      badge.style.display = "inline-flex";
+    } else {
+      badge.textContent = "ปิดแล้ว";
+      badge.className = "pill";
+      badge.style.background = "#f8fafc";
+      badge.style.color = "#94a3b8";
+      badge.style.border = "1px solid #e2e8f0";
+      badge.style.display = "inline-flex";
+    }
+  }
+}
+
 function populateFilters(){
   const savedCamp = document.getElementById("dash-campaign")?.value;
   const savedProd = document.getElementById("dash-product")?.value;
@@ -795,34 +827,54 @@ function populateFilters(){
   const savedCustSales = document.getElementById("customer-sales-admin")?.value;
   const savedCustProv = document.getElementById("customer-province-admin")?.value;
 
-  // Format campaigns with active status
-  const sortedCamps = [...A_CAMPAIGNS].sort((a, b) => {
-    if (a.is_active !== b.is_active) return a.is_active ? -1 : 1;
-    return (b.start_date || "").localeCompare(a.start_date || "");
-  });
+  // Separate active campaigns and inactive campaigns
+  const activeCamps = A_CAMPAIGNS.filter(c => c.is_active).sort((a, b) => (b.start_date || "").localeCompare(a.start_date || ""));
+  const inactiveCamps = A_CAMPAIGNS.filter(c => !c.is_active).sort((a, b) => (b.start_date || "").localeCompare(a.start_date || ""));
 
-  const campOpts = sortedCamps.map(x => {
-    const statusText = x.is_active ? "🟢 เปิดใช้งาน" : "⚪ ปิดแล้ว";
-    return `<option value="${x.id}">${PVT.escapeHtml(x.name)} (${statusText})</option>`;
-  }).join("");
+  let dashCampHtml = "";
+  // Show active campaigns first at the top
+  if (activeCamps.length) {
+    dashCampHtml += `<optgroup label="🟢 แคมเปญที่เปิดใช้งานอยู่ (Active)">` +
+      activeCamps.map(x => `<option value="${x.id}">🟢 ${PVT.escapeHtml(x.name)} (เปิดใช้งานอยู่)</option>`).join("") +
+      `</optgroup>`;
+  }
+  dashCampHtml += `<option value="">🌐 ทุก Campaign (ภาพรวมทั้งหมด)</option>`;
+  if (inactiveCamps.length) {
+    dashCampHtml += `<optgroup label="⚪ แคมเปญที่ปิดแล้ว (Closed / Inactive)">` +
+      inactiveCamps.map(x => `<option value="${x.id}">⚪ ${PVT.escapeHtml(x.name)} (ปิดแล้ว)</option>`).join("") +
+      `</optgroup>`;
+  }
 
   const dashCampEl = document.getElementById("dash-campaign");
   if (dashCampEl) {
-    dashCampEl.innerHTML = `<option value="">ทุก Campaign (ภาพรวมทั้งหมด)</option>` + campOpts;
-    if (savedCamp && A_CAMPAIGNS.some(c => c.id === savedCamp)) {
+    const isUserChosen = dashCampEl.dataset.userChosen === "true";
+    dashCampEl.innerHTML = dashCampHtml;
+
+    if (isUserChosen && savedCamp !== undefined && (savedCamp === "" || A_CAMPAIGNS.some(c => c.id === savedCamp))) {
       dashCampEl.value = savedCamp;
+    } else if (activeCamps.length > 0) {
+      // Default to the currently active campaign first
+      dashCampEl.value = activeCamps[0].id;
+    } else {
+      dashCampEl.value = "";
     }
+    updateCampaignStatusBadge();
   }
 
-  // Populate Compare Select A and B
+  // Populate Compare Select A and B (Active campaigns first)
   const compCampAEl = document.getElementById("compare-camp-a");
   const compCampBEl = document.getElementById("compare-camp-b");
   if (compCampAEl && compCampBEl) {
     const savedValA = compCampAEl.value;
     const savedValB = compCampBEl.value;
     
-    compCampAEl.innerHTML = campOpts;
-    compCampBEl.innerHTML = campOpts;
+    const compOpts = [
+      ...(activeCamps.length ? [`<optgroup label="🟢 แคมเปญที่เปิดใช้งานอยู่">` + activeCamps.map(x => `<option value="${x.id}">🟢 ${PVT.escapeHtml(x.name)}</option>`).join("") + `</optgroup>`] : []),
+      ...(inactiveCamps.length ? [`<optgroup label="⚪ แคมเปญที่ปิดแล้ว">` + inactiveCamps.map(x => `<option value="${x.id}">⚪ ${PVT.escapeHtml(x.name)}</option>`).join("") + `</optgroup>`] : [])
+    ].join("");
+
+    compCampAEl.innerHTML = compOpts;
+    compCampBEl.innerHTML = compOpts;
     
     // Set default selections
     if (A_CAMPAIGNS.length > 0) {
@@ -1398,8 +1450,9 @@ function renderQuestionInsights(rows){
     // Find all answers for this question
     const qAnswers = relevantAnswers.filter(a => {
       if (a.question_id === q.id) return true;
+      if (a.question_id && (a.question_id === `std_q${qNo}_dealer` || a.question_id === `std_q${qNo}_farmer` || a.question_id === `q${qNo}`)) return true;
       const dbQ = A_QUESTIONS.find(x => x.id === a.question_id);
-      if (dbQ && dbQ.question_no === qNo) return true;
+      if (dbQ && (dbQ.question_no === qNo || dbQ.sort_order === qNo)) return true;
       return false;
     });
 
@@ -1426,7 +1479,8 @@ function renderQuestionInsights(rows){
       });
 
       for (const a of qAnswers) {
-        const ratings = a.answer_json?.ratings || {};
+        const ans = a.answer_json || a.answer || {};
+        const ratings = ans.ratings || {};
         for (const [key, score] of Object.entries(ratings)) {
           const optObj = options.find(o => o.id === key || o.option_key === key);
           const label = optObj?.option_text || oMap[key]?.option_text || key;
@@ -1475,14 +1529,14 @@ function renderQuestionInsights(rows){
     else if (qType.includes("text") || qType.includes("feedback")) {
       const comments = [];
       for (const a of qAnswers) {
-        const ans = a.answer_json || {};
+        const ans = a.answer_json || a.answer || {};
         const txt = ans.text || ans.comment || (typeof ans === "string" ? ans : "");
         if (txt && typeof txt === "string" && txt.trim()) {
           // Find matching response for store name & date
           const resp = rows.find(r => r.id === a.response_id);
           comments.push({
             text: txt.trim(),
-            client_name: resp?.client_name || "ร้านค้า",
+            client_name: resp?.client_name || resp?.customer_name || "ร้านค้า",
             date: resp?.submitted_at ? PVT.formatDateTime(resp.submitted_at) : ""
           });
         }
@@ -1517,11 +1571,15 @@ function renderQuestionInsights(rows){
       });
 
       for (const a of qAnswers) {
-        const ans = a.answer_json || {};
+        const ans = a.answer_json || a.answer || {};
         const ids = Array.isArray(ans.selected) ? ans.selected : (ans.selected ? [ans.selected] : []);
         for (const id of ids) {
           const optObj = options.find(o => o.id === id || o.option_key === id);
           const label = optObj?.option_text || oMap[id]?.option_text || id;
+          counts[label] = (counts[label] || 0) + 1;
+        }
+        if (typeof ans.value === "number") {
+          const label = `${ans.value} คะแนน`;
           counts[label] = (counts[label] || 0) + 1;
         }
         if (ans.other && typeof ans.other === "string" && ans.other.trim()) {

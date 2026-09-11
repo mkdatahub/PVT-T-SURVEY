@@ -803,8 +803,9 @@ function renderSurveyInsights(filteredResponses) {
 
     const qAnswers = relevantAnswers.filter(a => {
       if (a.question_id === q.id) return true;
+      if (a.question_id && (a.question_id === `std_q${qNo}_dealer` || a.question_id === `std_q${qNo}_farmer` || a.question_id === `q${qNo}`)) return true;
       const dbQ = SALES_QUESTIONS.find(x => x.id === a.question_id);
-      if (dbQ && dbQ.question_no === qNo) return true;
+      if (dbQ && (dbQ.question_no === qNo || dbQ.sort_order === qNo)) return true;
       return false;
     });
 
