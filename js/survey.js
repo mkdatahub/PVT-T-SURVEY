@@ -1,5 +1,35 @@
 let SURVEY_CTX = null, CUSTOMER = null, MY_CUSTOMERS = [], FILTERED_CUSTOMERS = [], PRODUCTS_ALL = [], QUESTIONS = [], ACTIVE_CAMPAIGN = null, ALL_CAMPAIGNS = [], COMPLETED_CUSTOMER_IDS = new Set(), COMPLETED_PRODUCT_IDS = new Set();
 
+const PVT_THAILAND_PROVINCES = [
+  "กรุงเทพมหานคร", "กระบี่", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร",
+  "ขอนแก่น", "จันทบุรี", "ฉะเชิงเทรา", "ชลบุรี", "ชัยนาท",
+  "ชัยภูมิ", "ชุมพร", "เชียงราย", "เชียงใหม่", "ตรัง",
+  "ตราด", "ตาก", "นครนายก", "นครปฐม", "นครพนม",
+  "นครราชสีมา", "นครศรีธรรมราช", "นครสวรรค์", "นนทบุรี", "นราธิวาส",
+  "น่าน", "บึงกาฬ", "บุรีรัมย์", "ปทุมธานี", "ประจวบคีรีขันธ์",
+  "ปราจีนบุรี", "ปัตตานี", "พระนครศรีอยุธยา", "พะเยา", "พังงา",
+  "พัทลุง", "พิจิตร", "พิษณุโลก", "เพชรบุรี", "เพชรบูรณ์",
+  "แพร่", "ภูเก็ต", "มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน",
+  "ยโสธร", "ยะลา", "ร้อยเอ็ด", "ระนอง", "ระยอง",
+  "ราชบุรี", "ลพบุรี", "ลำปาง", "ลำพูน", "เลย",
+  "ศรีสะเกษ", "สกลนคร", "สงขลา", "สตูล", "สมุทรปราการ",
+  "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว", "สระบุรี", "สิงห์บุรี",
+  "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี", "สุรินทร์", "หนองคาย",
+  "หนองบัวลำภู", "อ่างทอง", "อำนาจเจริญ", "อุดรธานี", "อุตรดิตถ์",
+  "อุทัยธานี", "อุบลราชธานี"
+].sort((a, b) => a.localeCompare(b, "th"));
+
+function getSelectedFarmerProvince() {
+  const provSelect = document.getElementById("farmer-province");
+  if (!provSelect) return "";
+  const val = provSelect.value;
+  if (val === "__OTHER__") {
+    const otherInput = document.getElementById("farmer-province-other");
+    return otherInput ? otherInput.value.trim() : "";
+  }
+  return val.trim();
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   PVT.requireConfigured();
   SURVEY_CTX = await PVT.requireAuth(["sales", "admin", "management"]);
@@ -148,16 +178,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
 
-    if (rawProvince) {
-      const farmerProvSelect = document.getElementById("farmer-province");
-      if (farmerProvSelect) farmerProvSelect.value = rawProvince;
-    }
-
     // 4. Load Products
     PRODUCTS_ALL = await PVT.loadProducts();
 
     renderCampaignSelect();
     renderProvinceFilter();
+
+    if (rawProvince) {
+      const farmerProvSelect = document.getElementById("farmer-province");
+      const otherWrap = document.getElementById("farmer-province-other-wrap");
+      const otherInput = document.getElementById("farmer-province-other");
+      if (farmerProvSelect) {
+        const hasOption = Array.from(farmerProvSelect.options).some(o => o.value === rawProvince);
+        if (hasOption) {
+          farmerProvSelect.value = rawProvince;
+          if (otherWrap) otherWrap.classList.add("hidden");
+        } else {
+          farmerProvSelect.value = "__OTHER__";
+          if (otherWrap) otherWrap.classList.remove("hidden");
+          if (otherInput) otherInput.value = rawProvince;
+        }
+      }
+    }
+
     applyCustomerFilters(false);
     handleRespondentTypeChange();
     renderHeader();
@@ -186,8 +229,7 @@ function renderHeader() {
   const type = document.getElementById("respondent-type")?.value || "";
 
   if (type === "farmer") {
-    const provSelect = document.getElementById("farmer-province");
-    const prov = provSelect ? provSelect.value : "";
+    const prov = getSelectedFarmerProvince();
     if (nameEl) nameEl.textContent = "กลุ่มผู้ตอบแบบสอบถาม: เกษตรกร / ผู้ใช้จริง";
     if (metaEl) metaEl.textContent = prov ? `พื้นที่เป้าหมาย: จังหวัด ${prov}` : "โปรดระบุจังหวัดของเกษตรกรด้านล่างเพื่อเริ่มทำแบบสอบถาม";
   } else {
@@ -271,11 +313,32 @@ function renderProvinceFilter() {
   provSelect.innerHTML = optionsHtml;
 
   if (farmerProvSelect) {
+    const currentVal = farmerProvSelect.value;
     let farmerOptionsHtml = `<option value="">-- กรุณาเลือกจังหวัดของเกษตรกร --</option>`;
-    sortedProvs.forEach(prov => {
+    
+    // 1. Group by salesperson assigned store provinces (if any)
+    if (sortedProvs.length > 0) {
+      farmerOptionsHtml += `<optgroup label="📍 จังหวัดในเขตดูแลของคุณ">`;
+      sortedProvs.forEach(prov => {
+        farmerOptionsHtml += `<option value="${PVT.escapeHtml(prov)}">${PVT.escapeHtml(prov)}</option>`;
+      });
+      farmerOptionsHtml += `</optgroup>`;
+    }
+
+    // 2. All 77 provinces across Thailand
+    farmerOptionsHtml += `<optgroup label="🌐 ทุกจังหวัดในประเทศไทย (77 จังหวัด)">`;
+    PVT_THAILAND_PROVINCES.forEach(prov => {
       farmerOptionsHtml += `<option value="${PVT.escapeHtml(prov)}">${PVT.escapeHtml(prov)}</option>`;
     });
+    farmerOptionsHtml += `</optgroup>`;
+
+    // 3. Custom / Other province entry
+    farmerOptionsHtml += `<option value="__OTHER__">✏️ อื่นๆ (พิมพ์ระบุจังหวัดเอง)</option>`;
+    
     farmerProvSelect.innerHTML = farmerOptionsHtml;
+    if (currentVal) {
+      farmerProvSelect.value = currentVal;
+    }
   }
 
   // If CUSTOMER has a specific province, pre-select
@@ -393,7 +456,8 @@ function syncMetadataHighlights() {
     "product-select",
     "respondent-type",
     "respondent-name",
-    "farmer-province"
+    "farmer-province",
+    "farmer-province-other"
   ];
   ids.forEach(id => {
     const el = document.getElementById(id);
@@ -411,6 +475,7 @@ function handleRespondentTypeChange() {
   const type = document.getElementById("respondent-type").value;
   const dealerContainer = document.getElementById("dealer-fields-container");
   const farmerContainer = document.getElementById("farmer-fields-container");
+  const farmerOtherWrap = document.getElementById("farmer-province-other-wrap");
 
   if (type === "dealer") {
     if (dealerContainer) dealerContainer.classList.remove("hidden");
@@ -422,6 +487,10 @@ function handleRespondentTypeChange() {
   } else if (type === "farmer") {
     if (dealerContainer) dealerContainer.classList.add("hidden");
     if (farmerContainer) farmerContainer.classList.remove("hidden");
+    const farmerProvSelect = document.getElementById("farmer-province");
+    if (farmerOtherWrap && farmerProvSelect) {
+      farmerOtherWrap.classList.toggle("hidden", farmerProvSelect.value !== "__OTHER__");
+    }
     if (CUSTOMER && !CUSTOMER.client_id?.startsWith("FARMER-")) {
       CUSTOMER = null;
     }
@@ -443,7 +512,8 @@ function bindEvents() {
     "product-select",
     "respondent-type",
     "respondent-name",
-    "farmer-province"
+    "farmer-province",
+    "farmer-province-other"
   ];
   ids.forEach(id => {
     const el = document.getElementById(id);
@@ -523,10 +593,33 @@ function bindEvents() {
   }
 
   const farmerProvSelect = document.getElementById("farmer-province");
+  const farmerProvOtherWrap = document.getElementById("farmer-province-other-wrap");
+  const farmerProvOtherInput = document.getElementById("farmer-province-other");
+
   if (farmerProvSelect) {
     farmerProvSelect.addEventListener("change", async () => {
+      const isOther = farmerProvSelect.value === "__OTHER__";
+      if (farmerProvOtherWrap) {
+        farmerProvOtherWrap.classList.toggle("hidden", !isOther);
+      }
+      if (isOther && farmerProvOtherInput) {
+        farmerProvOtherInput.focus();
+      }
       renderHeader();
       await fetchCompletedProductsForSelectedCustomer();
+      syncMetadataHighlights();
+    });
+  }
+
+  if (farmerProvOtherInput) {
+    let provDebounce;
+    farmerProvOtherInput.addEventListener("input", () => {
+      clearTimeout(provDebounce);
+      provDebounce = setTimeout(async () => {
+        renderHeader();
+        await fetchCompletedProductsForSelectedCustomer();
+        syncMetadataHighlights();
+      }, 200);
     });
   }
 
@@ -604,8 +697,15 @@ async function submitSurvey() {
   if (!productId) return PVT.toast("กรุณาเลือกสินค้า", "error");
 
   if (respondentType === "farmer") {
-    const province = document.getElementById("farmer-province").value;
-    if (!province) return PVT.toast("กรุณาเลือกจังหวัดของเกษตรกร", "error");
+    const province = getSelectedFarmerProvince();
+    if (!province) {
+      const provSelect = document.getElementById("farmer-province");
+      if (provSelect && provSelect.value === "__OTHER__") {
+        document.getElementById("farmer-province-other")?.focus();
+        return PVT.toast("กรุณาระบุชื่อจังหวัดของเกษตรกรในช่อง 'ระบุชื่อจังหวัด (อื่นๆ)'", "error");
+      }
+      return PVT.toast("กรุณาเลือกหรือระบุจังหวัดของเกษตรกร", "error");
+    }
 
     const mySalesId = SURVEY_CTX?.profile?.salesperson_id || "c03a7c5e-ccc8-559d-9223-3379b540f53d";
     let farmerCust = MY_CUSTOMERS.find(c => c.client_name === `เกษตรกรทั่วไป (${province})`);
@@ -864,7 +964,7 @@ async function fetchCompletedProductsForSelectedCustomer() {
 
   const respondentType = document.getElementById("respondent-type")?.value || "";
   if (respondentType === "farmer") {
-    const province = document.getElementById("farmer-province")?.value || "";
+    const province = getSelectedFarmerProvince();
     if (province) {
       const farmerCust = MY_CUSTOMERS.find(c => c.client_name === `เกษตรกรทั่วไป (${province})`);
       if (farmerCust) {
@@ -989,6 +1089,12 @@ window.chooseNextCustomer = function() {
   if (custSelect) custSelect.value = "";
   const prodSelect = document.getElementById("product-select");
   if (prodSelect) prodSelect.value = "";
+  const farmerProvSelect = document.getElementById("farmer-province");
+  if (farmerProvSelect) farmerProvSelect.value = "";
+  const farmerProvOtherInput = document.getElementById("farmer-province-other");
+  if (farmerProvOtherInput) farmerProvOtherInput.value = "";
+  const farmerProvOtherWrap = document.getElementById("farmer-province-other-wrap");
+  if (farmerProvOtherWrap) farmerProvOtherWrap.classList.add("hidden");
   const qPanel = document.getElementById("questions-panel");
   if (qPanel) qPanel.classList.add("hidden");
 

@@ -103,7 +103,7 @@ tr:last-child td{border-bottom:0}
 .scale-choice input:checked+label{background:var(--brand);border-color:var(--brand);color:#fff}
 .scale-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-top:6px}
 .tabs{display:flex;gap:6px;overflow:auto;margin-bottom:18px;padding-bottom:4px}
-.tab-btn{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 13px;font-weight:750}
+.tab-btn{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 13px;font-weight:normal}
 .tab-btn.active{background:var(--brand);color:#fff;border-color:var(--brand)}
 .tab-panel{display:none}.tab-panel.active{display:block}
 .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:50;display:grid;place-items:center;padding:18px}
@@ -148,7 +148,102 @@ footer{color:var(--muted);text-align:center;font-size:12px;padding:24px}
 }
 @media(max-width:640px){
   .page{padding:16px 10px 38px}
-  .topbar-inner{padding:10px 12px}
+  .topbar-inner{
+    padding:8px 10px;
+    display:flex;
+    flex-direction:row;
+    justify-content:space-between;
+    align-items:center;
+    gap:6px;
+    flex-wrap:nowrap;
+  }
+  .topbar-inner .brand{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:13px;
+    flex-shrink:1;
+    min-width:0;
+    overflow:hidden;
+  }
+  .topbar-inner .brand > div:last-child{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .topbar-inner .brand-mark{
+    width:34px !important;
+    height:34px !important;
+    padding:2px !important;
+    border-radius:8px !important;
+    flex-shrink:0;
+  }
+  .topbar-inner .brand-mark img{
+    width:28px !important;
+    height:28px !important;
+  }
+  .topbar-inner .brand small{
+    font-size:10px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .topbar-inner .actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:4px;
+    flex-shrink:0;
+    flex-wrap:nowrap;
+  }
+  .topbar-inner .actions .btn,
+  .topbar-inner .actions a{
+    height:34px !important;
+    padding:0 8px !important;
+    font-size:12px !important;
+    white-space:nowrap;
+  }
+  .topbar-inner .actions .topbar-logout-btn,
+  .topbar-inner .actions [data-action="logout"]{
+    width:34px !important;
+    height:34px !important;
+    min-width:34px !important;
+    padding:0 !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border-radius:21px !important;
+  }
+  .topbar-inner .actions #topbar-notification-bell{
+    width:34px !important;
+    height:34px !important;
+    min-width:34px !important;
+    padding:0 !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border-radius:8px !important;
+  }
+  .topbar-inner .actions [data-action="logout"] span,
+  .topbar-inner .actions .btn-label-responsive{
+    display:none !important;
+  }
+  .topbar-inner .actions #notification-dropdown{
+    width:min(320px, calc(100vw - 20px)) !important;
+    right:-10px !important;
+  }
+  .topbar-user-chip{
+    max-width:115px;
+    height:34px !important;
+    padding:2px 8px 2px 4px !important;
+  }
+  .topbar-user-chip b{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:65px;
+    display:inline-block;
+  }
   .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
   .filters{grid-template-columns:1fr}
   .customer-row{grid-template-columns:1fr}
@@ -157,6 +252,11 @@ footer{color:var(--muted);text-align:center;font-size:12px;padding:24px}
   .scale-row{gap:5px}
   .scale-choice label{padding:12px 2px}
   .copy-row{grid-template-columns:1fr}
+  .question{padding:14px 12px;margin-bottom:12px}
+  .public-rating-item{padding:12px 10px}
+  .public-rating-choices{gap:5px}
+  .public-choice-pill .choice-val{padding:10px 2px;font-size:14px;box-sizing:border-box}
+  .public-scale-pill .pill-number{padding:10px 2px;font-size:14px;box-sizing:border-box}
 }
 
 /* ==========================================================================
@@ -612,7 +712,7 @@ footer{color:var(--muted);text-align:center;font-size:12px;padding:24px}
 
 .summary-prod-name {
   font-size: 13px;
-  font-weight: 750;
+  font-weight: normal;
   color: #123e2a;
   white-space: nowrap;
   overflow: hidden;

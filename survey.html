@@ -11,9 +11,16 @@
 </head><body>
 <header class="topbar"><div class="topbar-inner">
   <div class="brand"><div class="brand-mark" style="width:52px;height:52px;background:#f8fafc;padding:4px;display:grid;place-items:center"><img src="icon-192.png" alt="Logo" style="width:46px;height:46px;object-fit:contain" referrerPolicy="no-referrer"></div><div>PVT Survey<small>แบบสอบถามโดยทีมขาย</small></div></div>
-  <div class="actions">
-    <span class="small muted" style="display:inline-flex;align-items:center;gap:5px"><svg class="pvt-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#037e85;width:24px;height:24px"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <b id="current-user" style="color:#1245a3"></b></span>
-    <button class="btn btn-outline btn-sm" data-action="logout">ออกจากระบบ</button>
+  <div class="actions" style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;">
+    <div class="topbar-user-chip" style="display:inline-flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;padding:3px 12px 3px 6px;border-radius:20px;height:36px;box-sizing:border-box;">
+      <div style="width:24px;height:24px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;color:#037e85;flex-shrink:0;">
+        <svg class="pvt-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <b id="current-user" style="color:#1245a3;font-size:13px;"></b>
+    </div>
+    <button class="btn btn-outline btn-sm topbar-logout-btn" data-action="logout" style="width:34px;height:34px;min-width:34px;padding:0;border-radius:21px;color:#dc2626;border-color:#fecaca;background:#fff;display:inline-flex;align-items:center;justify-content:center;" title="ออกจากระบบ" aria-label="ออกจากระบบ">
+      <svg class="pvt-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
   </div>
 </div></header>
 <main id="survey-area" class="page narrow">
@@ -22,7 +29,7 @@
 
   <div id="survey-form-container">
   <div class="survey-head">
-    <div class="small muted">ร้านค้า / จุดเยี่ยม</div><h1 id="customer-name" style="margin:5px 0 2px"></h1><div id="customer-meta" class="muted"></div>
+    <div class="small muted">ร้านค้า / จุดเยี่ยม</div><h1 id="customer-name" style="margin:5px 0 2px;font-size:30px"></h1><div id="customer-meta" class="muted"></div>
   </div>
   <div id="surveyor-info-badge" style="display:none; margin-bottom:15px; align-items:center; gap:8px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:12px; padding:10px 14px; font-size:13px; color:#334155;">
     <!-- Filled dynamically by js/survey.js -->
@@ -64,9 +71,15 @@
 
     <!-- 3. กลุ่มฟิลด์สำหรับ เกษตรกร (Farmer) -->
     <div id="farmer-fields-container" class="hidden" style="margin-bottom:12px">
-      <div class="field">
-        <label for="farmer-province">จังหวัดที่ตั้งกลุ่ม/ที่อยู่เกษตรกร</label>
-        <select id="farmer-province" class="select"></select>
+      <div class="grid grid-2" id="farmer-province-grid" style="align-items: flex-end;">
+        <div class="field" id="farmer-province-select-wrap">
+          <label for="farmer-province" style="font-weight: 600;">จังหวัดที่ตั้งกลุ่ม/ที่อยู่เกษตรกร</label>
+          <select id="farmer-province" class="select"></select>
+        </div>
+        <div class="field hidden" id="farmer-province-other-wrap">
+          <label for="farmer-province-other" style="font-weight: 600; color: var(--brand);">✏️ ระบุชื่อจังหวัด (กรณีอื่นๆ / นอกพื้นที่)</label>
+          <input id="farmer-province-other" class="input" placeholder="พิมพ์ชื่อจังหวัด เช่น เชียงราย, ตาก, กาญจนบุรี...">
+        </div>
       </div>
     </div>
 

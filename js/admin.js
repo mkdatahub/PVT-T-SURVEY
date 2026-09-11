@@ -1212,7 +1212,7 @@ function renderDashboard(){
         return `
           <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:2px">
             <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;gap:8px">
-              <span style="font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px" title="${PVT.escapeHtml(item.label)}">
+              <span style="font-weight:normal;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px" title="${PVT.escapeHtml(item.label)}">
                 ${idx + 1}. ${PVT.escapeHtml(item.label)}
               </span>
               <span style="font-weight:800;color:${color};flex-shrink:0">${fillPct}% (${item.count} คน)</span>

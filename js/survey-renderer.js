@@ -118,57 +118,46 @@ PVT.renderQuestions = (container, questions, options={}) => {
         ${o.is_other?`<input class="input hidden other-input" data-for-option="${o.id || o.option_text}" placeholder="โปรดระบุรายละเอียด...">`:""}
       `).join("") + `</div>`;
     } else if(q.question_type === "rating_grid"){
-      if (isPublic) {
-        body = `<div class="public-rating-grid">` + qOpts.map((o, oIdx) => `
-          <div class="public-rating-item" data-option-id="${o.id || o.option_text}">
-            <div class="public-rating-label">
-              <span class="public-sub-num">${oIdx + 1}.</span> <strong>${PVT.escapeHtml(o.option_text || o.text || "")}</strong>
-            </div>
-            <div class="public-rating-choices">
-              ${[1, 2, 3, 4, 5].map(n => `
-                <label class="public-choice-pill">
-                  <input type="radio" name="q_${q.id}_${o.id || o.option_text}" value="${n}">
-                  <span class="choice-val">${n}</span>
-                </label>
-              `).join("")}
-            </div>
-            <div class="public-choice-hint">
-              <span>1 = น้อยที่สุด</span>
-              <span>3 = ปานกลาง</span>
-              <span>5 = มากที่สุด</span>
-            </div>
+      body = `<div class="public-rating-grid" style="margin-top: 8px;">` + qOpts.map((o, oIdx) => `
+        <div class="public-rating-item" data-option-id="${o.id || o.option_text}">
+          <div class="public-rating-label">
+            <span class="public-sub-num">${oIdx + 1}.</span> <strong>${PVT.escapeHtml(o.option_text || o.text || "")}</strong>
           </div>
-        `).join("") + `</div>`;
-      } else {
-        body = `<div class="table-wrap"><table class="rating-table"><thead><tr><th>หัวข้อ</th>${[1,2,3,4,5].map(n=>`<th>${n}</th>`).join("")}</tr></thead><tbody>`+
-          qOpts.map(o=>`<tr><td>${PVT.escapeHtml(o.option_text || o.text || "")}</td>${[1,2,3,4,5].map(n=>`<td><input aria-label="${PVT.escapeHtml(o.option_text || o.text || "")} ${n}" type="radio" name="q_${q.id}_${o.id || o.option_text}" value="${n}"></td>`).join("")}</tr>`).join("")+
-          `</tbody></table></div>`;
-      }
+          <div class="public-rating-choices">
+            ${[1, 2, 3, 4, 5].map(n => `
+              <label class="public-choice-pill">
+                <input type="radio" name="q_${q.id}_${o.id || o.option_text}" value="${n}">
+                <span class="choice-val">${n}</span>
+              </label>
+            `).join("")}
+          </div>
+          <div class="public-choice-hint">
+            <span>1 = น้อยที่สุด</span>
+            <span>3 = ปานกลาง</span>
+            <span>5 = มากที่สุด</span>
+          </div>
+        </div>
+      `).join("") + `</div>`;
     } else if(q.question_type === "scale"){
       const min=q.scale_min || 1,max=q.scale_max || 5;
       const nums=Array.from({length:max-min+1},(_,i)=>i+min);
-      if (isPublic) {
-        body = `
-          <div class="public-scale-wrapper">
-            <div class="public-scale-row">
-              ${nums.map(n=>`
-                <label class="public-scale-pill">
-                  <input id="q_${q.id}_${n}" type="radio" name="q_${q.id}" value="${n}">
-                  <span class="pill-number">${n}</span>
-                </label>
-              `).join("")}
-            </div>
-            <div class="public-scale-labels">
-              <span>${PVT.escapeHtml(q.scale_min_label || "น้อยที่สุด")}</span>
-              <span>${PVT.escapeHtml(q.scale_mid_label || "")}</span>
-              <span>${PVT.escapeHtml(q.scale_max_label || "มากที่สุด")}</span>
-            </div>
+      body = `
+        <div class="public-scale-wrapper" style="margin-top: 8px;">
+          <div class="public-scale-row">
+            ${nums.map(n=>`
+              <label class="public-scale-pill">
+                <input id="q_${q.id}_${n}" type="radio" name="q_${q.id}" value="${n}">
+                <span class="pill-number">${n}</span>
+              </label>
+            `).join("")}
           </div>
-        `;
-      } else {
-        body = `<div class="scale-row">${nums.map(n=>`<div class="scale-choice"><input id="q_${q.id}_${n}" type="radio" name="q_${q.id}" value="${n}"><label for="q_${q.id}_${n}">${n}</label></div>`).join("")}</div>
-        <div class="scale-labels"><span>${PVT.escapeHtml(q.scale_min_label || "")}</span><span>${PVT.escapeHtml(q.scale_mid_label || "")}</span><span>${PVT.escapeHtml(q.scale_max_label || "")}</span></div>`;
-      }
+          <div class="public-scale-labels">
+            <span>${PVT.escapeHtml(q.scale_min_label || "น้อยที่สุด")}</span>
+            <span>${PVT.escapeHtml(q.scale_mid_label || "")}</span>
+            <span>${PVT.escapeHtml(q.scale_max_label || "มากที่สุด")}</span>
+          </div>
+        </div>
+      `;
     } else if(q.question_type === "text"){
       body = `<div style="margin-top:10px">
         <textarea class="textarea" name="q_${q.id}" rows="3" placeholder="ระบุรายละเอียดหรือความคิดเห็น..." style="width:100%;font-family:inherit;font-size:14px;padding:10px 12px;border-radius:10px;border:1px solid #cce0d2;background:#fff;box-sizing:border-box"></textarea>
