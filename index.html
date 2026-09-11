@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PVT&T GROUP — เข้าสู่ระบบ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+  </head>
+  <body>
+    <main class="login-wrap">
+      <section class="card login-card">
+        <div class="brand">
+          <div class="brand-mark" style="background:#f8fafc;padding:4px">
+            <img src="icon-192.png" alt="Logo" style="width:28px;height:28px;object-fit:contain" referrerPolicy="no-referrer" />
+          </div>
+          <div>PVT&T GROUP<small>ระบบสำรวจและประเมินผล</small></div>
+        </div>
+
+        <div class="login-tabs" role="tablist">
+          <button
+            type="button"
+            id="tab-btn-sales"
+            class="tab-btn active"
+            data-target="panel-sales"
+            style="
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 6px;
+            "
+          >
+            <svg
+              class="pvt-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <span>ฝ่ายขาย (เซลล์)</span>
+          </button>
+          <button
+            type="button"
+            id="tab-btn-admin"
+            class="tab-btn"
+            data-target="panel-admin"
+            style="
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 6px;
+            "
+          >
+            <svg
+              class="pvt-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <span>แอดมิน / ผู้บริหาร</span>
+          </button>
+        </div>
+
+        <!-- SALES LOGIN: NAME ONLY, NO PASSWORD -->
+        <div id="panel-sales" class="login-panel active">
+          <div style="margin-bottom: 14px; text-align: center">
+            <h2 style="margin: 0 0 4px; font-size: 20px; text-align: center">เข้าสู่ระบบฝ่ายขาย</h2>
+            <p class="small muted" style="margin: 0; text-align: center">
+              เลือกชื่อของท่านเพื่อเข้าใช้งานได้ทันที
+            </p>
+          </div>
+          <form id="sales-login-form" class="stack">
+            <div class="field">
+              <label for="salesperson-select">เลือกชื่อของท่าน</label>
+              <select id="salesperson-select" class="select" required>
+                <option value="">-- กำลังโหลดรายชื่อเซลล์... --</option>
+              </select>
+            </div>
+
+            <div id="custom-name-field" class="field hidden">
+              <label for="custom-name-input">พิมพ์ชื่อเซลล์</label>
+              <input
+                id="custom-name-input"
+                class="input"
+                placeholder="พิมพ์ชื่อ-นามสกุล หรือชื่อเล่น"
+              />
+            </div>
+
+            <button
+              id="sales-submit-btn"
+              class="btn btn-primary"
+              type="submit"
+              style="
+                background-color: #000c85;
+                padding: 12px;
+                font-size: 15px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+              "
+            >
+              <span style="font-weight: normal;">เข้าสู่ระบบ (เซลล์)</span>
+              <svg
+                class="pvt-icon"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        <!-- ADMIN / MANAGEMENT LOGIN: USERNAME & PASSWORD -->
+        <div id="panel-admin" class="login-panel">
+          <div style="margin-bottom: 14px">
+            <h2 style="margin: 0 0 4px; font-size: 20px">เข้าสู่ระบบจัดการ</h2>
+            <p class="small muted" style="margin: 0">
+              สำหรับผู้ดูแลระบบและผู้บริหาร (ใช้รหัสผ่าน)
+            </p>
+          </div>
+          <form id="login-form" class="stack">
+            <div class="field">
+              <label for="username">Username หรือ Email</label>
+              <input
+                id="username"
+                class="input"
+                autocomplete="username"
+                required
+                placeholder="เช่น admin"
+              />
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                class="input"
+                autocomplete="current-password"
+                required
+                placeholder="••••••••"
+              />
+            </div>
+            <button
+              class="btn btn-outline"
+              type="submit"
+              style="
+                background: #000c85;
+                color: #fff;
+                padding: 12px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+              "
+            >
+              <svg
+                class="pvt-icon"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span style="font-weight: normal;">เข้าสู่ระบบ (Admin / Management)</span>
+            </button>
+          </form>
+        </div>
+
+        <div class="divider"></div>
+        <div
+          class="small muted"
+          style="
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+          "
+        >
+          <svg
+            class="pvt-icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"
+            />
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+            <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" />
+            <path d="M2 7h20" />
+          </svg>
+          <span
+            >PVTTPLASGROUP</span
+          >
+        </div>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/icons.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/login.js"></script>
+  </body>
+</html>

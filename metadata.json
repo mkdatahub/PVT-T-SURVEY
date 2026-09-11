@@ -1,0 +1,6 @@
+{
+  "name": "PVT Survey",
+  "description": "ระบบแบบสอบถามและสรุปผลสำรวจความพึงพอใจและคุณค่าผลิตภัณฑ์ตราต้นไม้ สำหรับฝ่ายขายและผู้บริหาร",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

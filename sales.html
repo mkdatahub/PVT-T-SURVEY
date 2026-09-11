@@ -1,0 +1,411 @@
+<!doctype html><html lang="th"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PVT Survey — เซลล์บันทึกผลการเข้าเยี่ยม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head><body>
+<div class="app-shell">
+<header class="topbar"><div class="topbar-inner">
+  <div class="brand"><div class="brand-mark" style="background:#f8fafc;padding:4px"><img src="icon-192.png" alt="Logo" style="width:28px;height:28px;object-fit:contain" referrerPolicy="no-referrer"></div><div>PVT Survey<small>แบบสอบถามภายในบริษัท (ฝ่ายขาย)</small></div></div>
+  <div class="actions">
+    <a id="sales-admin-link" href="admin.html" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:4px">
+      <svg class="pvt-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      <span>หน้า Admin</span>
+    </a>
+    <span class="small muted" style="display:inline-flex;align-items:center;gap:5px"><svg class="pvt-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <b id="current-user">...</b></span>
+    <button class="btn btn-outline btn-sm" data-action="logout">ออกจากระบบ</button>
+  </div>
+</div></header>
+<main class="page page-wide">
+  <!-- View Navigation Switcher -->
+  <nav class="sales-view-nav" role="tablist" aria-label="Sales Navigation">
+    <button type="button" id="tab-btn-dash" class="active" data-view="panel-dashboard">
+      <svg class="pvt-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/><line x1="3" x2="21" y1="20" y2="20"/></svg> แดชบอร์ดติดตามผล &amp; สรุปข้อมูล (Dashboard)
+    </button>
+    <button type="button" id="tab-btn-stores" data-view="panel-stores">
+      <svg class="pvt-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></svg> รายชื่อร้านค้า &amp; บันทึกแบบสอบถาม (Stores &amp; Visits)
+    </button>
+  </nav>
+
+  <!-- =========================================================================
+       VIEW 1: RESPONSE TRACKING DASHBOARD (สรุปตามร้านค้า ผลิตภัณฑ์ และเจาะลึกคำตอบ)
+       ========================================================================= -->
+  <div id="panel-dashboard" class="tab-panel active">
+    
+    <!-- Hero / Summary Header -->
+    <section class="dash-header-card">
+      <div class="dash-hero-row">
+        <div>
+          <h1 style="margin:0 0 6px;font-size:clamp(22px,3.5vw,28px);color:#0f3f28;display:flex;align-items:center;gap:8px">
+            <svg class="pvt-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/><line x1="3" x2="21" y1="20" y2="20"/></svg>
+            <span>แดชบอร์ดสรุปผลแบบสอบถามการเข้าเยี่ยม</span>
+          </h1>
+          <p class="muted" style="margin:0;font-size:14px">
+            ระบบบันทึกและประมวลผลข้อมูลการเข้าเยี่ยมร้านค้าตัวแทนจำหน่ายตราต้นไม้ (P.V.T. &amp; T Plas) <span id="dash-user-subtitle" class="pill success" style="margin-left:6px;font-size:11px"></span>
+          </p>
+        </div>
+        <div class="actions">
+          <a href="survey.html" class="btn btn-primary btn-sm" style="background:var(--brand);color:#fff;display:inline-flex;align-items:center;gap:5px;font-weight:750">
+            <svg class="pvt-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>+ กรอกแบบสอบถามใหม่</span>
+          </a>
+          <button id="dash-refresh-btn" class="btn btn-outline btn-sm" title="โหลดข้อมูลล่าสุด">
+            <svg class="pvt-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+            <span>รีเฟรชข้อมูล</span>
+          </button>
+          <button id="dash-copy-btn" class="btn btn-secondary btn-sm" title="คัดลอกสรุปข้อความส่งรายงานผู้บริหาร">
+            <svg class="pvt-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="18" x="5" y="4" rx="2"/><path d="M9 2h6a1 1 0 0 1 1 1v1H8V3a1 1 0 0 1 1-1z"/></svg>
+            <span>คัดลอกรายงานสรุป</span>
+          </button>
+          <button id="dash-export-btn" class="btn btn-outline btn-sm" title="ส่งออกเป็นไฟล์ CSV">
+            <svg class="pvt-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>ส่งออก CSV</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- New Dashboard Completion Progress Card -->
+    <section class="card" style="margin-bottom:18px; padding: 18px 24px; border-left: 5px solid var(--brand); box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:12px;">
+        <div>
+          <h3 style="margin:0; font-size:16px; color:#1e293b; font-weight:750; display:flex; align-items:center; gap:6px;">
+            <svg class="pvt-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>ความคืบหน้าการกรอกแบบสอบถามสำหรับร้านค้าในความดูแล</span>
+          </h3>
+          <p class="small muted" style="margin:2px 0 0;">อัตราส่วนการกรอกแบบสอบถามของร้านค้าทั้งหมดที่คุณเป็นผู้ดูแลในจังหวัดเป้าหมาย</p>
+        </div>
+        <div style="text-align:right;">
+          <span id="dash-progress-percentage" style="font-size:24px; font-weight:800; color:var(--brand);">0.0%</span>
+        </div>
+      </div>
+      <div style="width:100%; height:16px; background:#f1f5f9; border-radius:99px; overflow:hidden; border:1px solid #e2e8f0; margin-bottom:8px; position:relative;">
+        <div id="dash-progress-bar-fill" style="width:0%; height:100%; background:linear-gradient(90deg, #10b981, #059669); border-radius:99px; transition:width .5s cubic-bezier(0.4, 0, 0.2, 1)"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;" class="small">
+        <span id="dash-progress-count" style="color:#475569; font-weight:600;">กรอกสำเร็จ 0 จากทั้งหมด 0 ร้านค้า</span>
+        <span id="dash-progress-status-text" class="pill muted" style="font-weight:700;">ยังทำไม่เสร็จ</span>
+      </div>
+    </section>
+
+    <!-- 4 Primary KPI Summary Cards -->
+    <section class="grid grid-4" style="margin-bottom:18px">
+      <div class="kpi">
+        <div id="dash-kpi-total" class="value">0</div>
+        <div class="label">แบบสอบถามที่เก็บได้ทั้งหมด</div>
+        <div id="dash-kpi-source-sub" class="small muted" style="margin-top:4px">ร้านค้า 0 • เกษตรกร 0 ชุด</div>
+      </div>
+      <div class="kpi">
+        <div id="dash-kpi-stores" class="value">0</div>
+        <div class="label">ร้านค้าที่เข้าเยี่ยมและประเมินแล้ว</div>
+        <div id="dash-kpi-stores-sub" class="small muted" style="margin-top:4px">จากทั้งหมด 0 ร้าน (0%)</div>
+      </div>
+      <div class="kpi">
+        <div id="dash-kpi-products" class="value">0</div>
+        <div class="label">ชนิดสินค้าที่ได้รับการประเมิน</div>
+        <div id="dash-kpi-products-sub" class="small muted" style="margin-top:4px">จากทั้งหมด 8 ชนิดสินค้า</div>
+      </div>
+      <div class="kpi">
+        <div id="dash-kpi-score" class="value">-</div>
+        <div class="label">คะแนนความพึงพอใจเฉลี่ย</div>
+        <div id="dash-kpi-score-sub" class="small muted" style="margin-top:4px">สเกล 1.0 – 5.0 ⭐</div>
+      </div>
+    </section>
+
+    <!-- Incomplete Surveys Action Banner / Callout -->
+    <section id="incomplete-shops-alert" class="incomplete-alert-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:280px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span class="pill warning" style="font-weight:800;font-size:12px;display:inline-flex;align-items:center;gap:4px">
+              <svg class="pvt-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>แผนการเข้าเยี่ยม</span>
+            </span>
+            <h2 style="margin:0;font-size:17px;color:#9a3412;font-weight:800;display:inline">ร้านค้าที่ยังไม่ได้เข้าเยี่ยมบันทึก (<span id="incomplete-shops-count">0</span> ร้าน)</h2>
+          </div>
+          <p class="small" style="margin:0 0 10px;color:#7c2d12;line-height:1.5">
+            มีร้านค้าในความดูแลอีก <b id="incomplete-shops-text">0 ร้าน</b> ที่ยังไม่มีข้อมูลแบบสอบถาม กรุณาวางแผนเข้าเยี่ยมร้านค้าเพื่อบันทึกข้อมูลความพึงพอใจ
+          </p>
+          
+          <!-- Mini Progress Bar for store completion -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div style="flex:1;height:9px;background:#ffedd5;border-radius:99px;overflow:hidden;border:1px solid #fed7aa">
+              <div id="incomplete-progress-fill" style="width:0%;height:100%;background:linear-gradient(90deg,#10b981,#059669);border-radius:99px;transition:width .4s ease"></div>
+            </div>
+            <span id="incomplete-progress-label" class="small" style="font-weight:800;color:#9a3412;white-space:nowrap">0% สำเร็จ</span>
+          </div>
+
+          <!-- Quick shortcut chips of top pending shops -->
+          <div id="incomplete-chips-container" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span class="small" style="color:#9a3412;font-weight:750">ร้านที่ต้องเข้าเยี่ยม:</span>
+            <div id="incomplete-shops-chips" style="display:inline-flex;gap:6px;flex-wrap:wrap">
+              <!-- Dynamically rendered pending store chips -->
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+          <button type="button" id="btn-focus-incomplete" class="btn btn-primary btn-sm" style="background:#ea580c;border-color:#c2410c;display:inline-flex;align-items:center;gap:6px;font-weight:750">
+            <svg class="pvt-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>กรองดูร้านที่รอเข้าเยี่ยม</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard Filter Bar -->
+    <section class="card" style="margin-bottom:18px;padding:14px 18px">
+      <div class="filters" style="margin-bottom:0">
+        <div class="field">
+          <label for="dash-filter-campaign">Campaign</label>
+          <select id="dash-filter-campaign" class="select"></select>
+        </div>
+        <div class="field">
+          <label for="dash-filter-product">ผลิตภัณฑ์</label>
+          <select id="dash-filter-product" class="select"></select>
+        </div>
+        <div class="field">
+          <label for="dash-filter-province">จังหวัด / พื้นที่</label>
+          <select id="dash-filter-province" class="select"></select>
+        </div>
+        <div class="field" style="grid-column:span 1">
+          <label for="dash-filter-search">ค้นหาร้านค้า / รหัส</label>
+          <div style="display:flex;gap:6px">
+            <input id="dash-filter-search" class="input" placeholder="พิมพ์ชื่อร้าน หรือรหัสลูกค้า...">
+            <button id="dash-reset-filter" class="btn btn-outline btn-sm" title="ล้างตัวกรอง" style="padding:0 10px">
+              <svg class="pvt-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard Sub-Tabs (Summary by Store, Summary by Product, Deep Insights, Cross-Matrix, Recent Activity) -->
+    <nav class="dash-subtabs" role="tablist" aria-label="Dashboard sub views">
+      <button type="button" id="subtab-btn-stores" class="dash-subtab-btn active" data-subpanel="subpanel-stores">
+        <svg class="pvt-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></svg> สรุปตามร้านค้า (By Store)
+      </button>
+      <button type="button" id="subtab-btn-products" class="dash-subtab-btn" data-subpanel="subpanel-products">
+        <svg class="pvt-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg> สรุปตามผลิตภัณฑ์ (By Product)
+      </button>
+      <button type="button" id="subtab-btn-insights" class="dash-subtab-btn" data-subpanel="subpanel-insights">
+        <svg class="pvt-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> สรุปวิเคราะห์คำตอบ &amp; เสียงสะท้อน (Survey Insights)
+      </button>
+      <button type="button" id="subtab-btn-matrix" class="dash-subtab-btn" data-subpanel="subpanel-matrix">
+        <svg class="pvt-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg> ตารางความครอบคลุม (Store × Product Matrix)
+      </button>
+      <button type="button" id="subtab-btn-recent" class="dash-subtab-btn" data-subpanel="subpanel-recent">
+        <svg class="pvt-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ประวัติการตอบล่าสุด (Recent Responses)
+      </button>
+    </nav>
+
+    <!-- Subpanel 1: สรุปตามร้านค้า (Summarized by Store) -->
+    <div id="subpanel-stores" class="dash-subpanel active">
+      <div class="card">
+        <div class="section-title">
+          <div>
+            <h2 style="font-size:18px;margin:0 0 2px">สรุปผลการสำรวจแยกตามร้านค้า</h2>
+            <div class="muted small">แสดงจำนวนแบบสอบถามและรายการสินค้าที่แต่ละร้านค้าได้ประเมิน</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button id="store-scope-all" class="btn btn-outline btn-sm store-scope-btn active">ร้านทั้งหมด (<span id="count-scope-all">0</span>)</button>
+            <button id="store-scope-responded" class="btn btn-outline btn-sm store-scope-btn">เข้าเยี่ยมแล้ว (<span id="count-scope-responded">0</span>)</button>
+            <button id="store-scope-pending" class="btn btn-outline btn-sm store-scope-btn">ยังไม่เคยเข้าเยี่ยม (<span id="count-scope-pending">0</span>)</button>
+          </div>
+        </div>
+        
+        <div class="table-wrap">
+          <table id="table-summary-store">
+            <thead>
+              <tr>
+                <th style="min-width:180px">ชื่อร้านค้า / รหัส</th>
+                <th>จังหวัด</th>
+                <th style="text-align:center">สถานะ / จำนวนชุด</th>
+                <th style="min-width:220px">สินค้าที่ได้รับการประเมิน</th>
+                <th style="text-align:center">คะแนนเฉลี่ย</th>
+                <th>วันที่บันทึกล่าสุด</th>
+                <th style="text-align:right">การดำเนินการ</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-summary-store">
+              <tr><td colspan="7" class="empty">กำลังประมวลผลข้อมูลร้านค้า...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subpanel 2: สรุปตามผลิตภัณฑ์ (Summarized by Product) -->
+    <div id="subpanel-products" class="dash-subpanel">
+      <!-- Product Summary Cards Grid -->
+      <div id="product-cards-stat-grid" class="grid grid-4" style="margin-bottom:18px">
+        <!-- Dynamically rendered product stat cards -->
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <div>
+            <h2 style="font-size:18px;margin:0 0 2px">ตารางสรุปแบบสอบถามแยกตามผลิตภัณฑ์ตราต้นไม้</h2>
+            <div class="muted small">เปรียบเทียบสัดส่วนคำตอบ จำนวนร้านค้าที่ประเมิน และคะแนนความพึงพอใจ</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="table-summary-product">
+            <thead>
+              <tr>
+                <th style="min-width:200px">ผลิตภัณฑ์ตราต้นไม้</th>
+                <th style="text-align:center">จำนวนแบบสอบถาม</th>
+                <th style="text-align:center">จำนวนร้านค้าที่ประเมิน</th>
+                <th style="min-width:160px">สัดส่วนคำตอบ</th>
+                <th style="text-align:center">คะแนนเฉลี่ย</th>
+                <th>กลุ่มผู้ตอบ</th>
+                <th style="text-align:right">รายชื่อร้านค้า</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-summary-product">
+              <tr><td colspan="7" class="empty">กำลังประมวลผลข้อมูลผลิตภัณฑ์...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subpanel 3: สรุปวิเคราะห์คำตอบ & เสียงสะท้อน (Key Insights & Voice of Customer) -->
+    <div id="subpanel-insights" class="dash-subpanel">
+      <div class="section-title" style="margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div>
+          <h2 style="font-size:18px;margin:0 0 2px;color:#0f3f28">สรุปวิเคราะห์คำตอบ &amp; เสียงสะท้อนร้านค้า (Survey Insights)</h2>
+          <div id="sales-dynamic-insights-label" class="muted small">ประมวลผลคำตอบแบบ Dynamic อัตโนมัติตาม Campaign และชุดคำถามที่เลือก</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="sales-dynamic-insights-badge" class="pill success" style="font-size:12px;font-weight:750">ชุดคำถามมาตรฐาน</span>
+        </div>
+      </div>
+
+      <div id="sales-dynamic-question-insights-container" class="grid grid-2" style="gap:16px">
+        <!-- Dynamically rendered question cards -->
+      </div>
+    </div>
+
+    <!-- Subpanel 4: ตารางความครอบคลุม (Store × Product Matrix) -->
+    <div id="subpanel-matrix" class="dash-subpanel">
+      <div class="card">
+        <div class="section-title">
+          <div>
+            <h2 style="font-size:18px;margin:0 0 2px">ตารางความครอบคลุม (Store × Product Matrix)</h2>
+            <div class="muted small">ตรวจสอบว่าร้านค้าใดเคยประเมินสินค้าชนิดใดบ้าง เพื่อวางแผนเก็บข้อมูลให้ครบถ้วนทุกสินค้า</div>
+          </div>
+          <div class="small muted" style="display:flex;align-items:center;gap:6px">
+            <span class="matrix-cell-active" style="display:inline-flex;align-items:center;justify-content:center;padding:1px 4px"><svg class="pvt-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span> <span>= เคยประเมินแล้ว</span>
+            <span>&nbsp;|&nbsp;</span>
+            <span style="color:#a8beaf">-</span> <span>= ยังไม่เคยประเมิน</span>
+          </div>
+        </div>
+
+        <div class="matrix-table-wrap">
+          <table id="table-matrix" class="matrix-table">
+            <thead id="thead-matrix">
+              <!-- Dynamically populated headers with products -->
+            </thead>
+            <tbody id="tbody-matrix">
+              <tr><td colspan="10" class="empty">กำลังเตรียมตารางความครอบคลุม...</td></tr>
+            </tbody>
+            <tfoot id="tfoot-matrix">
+              <!-- Dynamically populated product sums -->
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subpanel 5: ประวัติการตอบล่าสุด (Recent Responses Log) -->
+    <div id="subpanel-recent" class="dash-subpanel">
+      <div class="card">
+        <div class="section-title">
+          <div>
+            <h2 style="font-size:18px;margin:0 0 2px">ประวัติแบบสอบถามที่บันทึกล่าสุด</h2>
+            <div class="muted small">บันทึกคำตอบเรียงจากล่าสุดไปหาเก่าสุด</div>
+          </div>
+          <span id="recent-count-pill" class="pill info">0 รายการ</span>
+        </div>
+
+        <div class="table-wrap">
+          <table id="table-recent">
+            <thead>
+              <tr>
+                <th>วัน-เวลาที่บันทึก</th>
+                <th>ร้านค้า</th>
+                <th>จังหวัด</th>
+                <th>ผลิตภัณฑ์</th>
+                <th>ผู้ให้ข้อมูล</th>
+                <th>ประเภทผู้ตอบ</th>
+                <th style="text-align:center">คะแนน</th>
+                <th style="text-align:right">รายละเอียด</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-recent">
+              <tr><td colspan="8" class="empty">ยังไม่มีประวัติแบบสอบถาม</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =========================================================================
+       VIEW 2: STORE DIRECTORY & SALES VISITS (รายชื่อร้านค้า & เข้าเยี่ยมบันทึก)
+       ========================================================================= -->
+  <div id="panel-stores" class="tab-panel">
+    <div class="hero">
+      <div>
+        <h1>ร้านค้าในความรับผิดชอบ</h1>
+        <p>รายชื่อร้านค้าตัวแทนจำหน่ายทั้งหมด เพื่อให้ฝ่ายขายเข้าเยี่ยมและบันทึกแบบสอบถามความพึงพอใจ</p>
+      </div>
+      <div>
+        <a href="survey.html" class="btn btn-primary btn-sm" style="display:inline-flex;align-items:center;gap:6px;font-weight:750">
+          <svg class="pvt-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>+ กรอกแบบสอบถาม</span>
+        </a>
+      </div>
+    </div>
+
+    <section class="grid grid-4" style="margin-bottom:18px">
+      <div class="kpi"><div id="kpi-customers" class="value">-</div><div class="label">ร้านค้าที่รับผิดชอบ</div></div>
+      <div class="kpi"><div id="kpi-provinces" class="value">-</div><div class="label">จังหวัด/พื้นที่</div></div>
+      <div class="kpi"><div id="kpi-responses" class="value">-</div><div class="label">แบบสอบถามที่บันทึกแล้ว</div></div>
+      <div class="kpi"><div id="kpi-pending" class="value">-</div><div class="label">ร้านที่รอเข้าเยี่ยม</div></div>
+    </section>
+
+    <section class="card">
+      <div class="filters">
+        <div class="field"><label for="province-filter">จังหวัด/พื้นที่</label><select id="province-filter" class="select"></select></div>
+        <div class="field"><label for="campaign-filter">Campaign</label><select id="campaign-filter" class="select"></select></div>
+        <div class="field">
+          <label for="store-status-filter">สถานะการเข้าเยี่ยม</label>
+          <select id="store-status-filter" class="select">
+            <option value="">ทั้งหมดทุกสถานะ</option>
+            <option value="pending">ยังไม่ได้เข้าเยี่ยม (รอดำเนินการ)</option>
+            <option value="completed">บันทึกแบบสอบถามแล้ว</option>
+          </select>
+        </div>
+        <div class="field"><label for="search-customer">ค้นหาร้าน / รหัสลูกค้า</label><input id="search-customer" class="input" placeholder="พิมพ์ชื่อร้าน รหัส หรือจังหวัด"></div>
+        <div class="right"><span id="customer-count" class="pill"></span></div>
+      </div>
+      <div id="customer-list" class="customer-list"><div class="empty">กำลังโหลดรายชื่อร้านค้า...</div></div>
+    </section>
+  </div>
+</main>
+<footer>P.V.T. &amp; T Plas Co., Ltd. — USP Internal Survey System</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script><script src="js/utils.js"></script><script src="js/icons.js"></script><script src="js/supabase-client.js"></script><script src="js/auth.js"></script><script src="js/survey-renderer.js"></script><script src="js/campaign-questions-manager.js"></script><script src="js/survey-detail-modal.js"></script><script src="js/sales.js"></script>
+
+</body></html>

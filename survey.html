@@ -1,0 +1,96 @@
+<!doctype html><html lang="th"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PVT Survey — กรอกหลังเยี่ยมลูกค้า</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head><body>
+<header class="topbar"><div class="topbar-inner">
+  <div class="brand"><div class="brand-mark" style="background:#f8fafc;padding:4px"><img src="icon-192.png" alt="Logo" style="width:28px;height:28px;object-fit:contain" referrerPolicy="no-referrer"></div><div>PVT Survey<small>แบบสอบถามโดยทีมขาย</small></div></div>
+  <div class="actions">
+    <span class="small muted" style="display:inline-flex;align-items:center;gap:5px"><svg class="pvt-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <b id="current-user"></b></span>
+    <button class="btn btn-outline btn-sm" data-action="logout">ออกจากระบบ</button>
+  </div>
+</div></header>
+<main id="survey-area" class="page narrow">
+  <div class="survey-head">
+    <div class="small muted">ร้านค้า / จุดเยี่ยม</div><h1 id="customer-name" style="margin:5px 0 2px"></h1><div id="customer-meta" class="muted"></div>
+  </div>
+  <div id="surveyor-info-badge" style="display:none; margin-bottom:15px; align-items:center; gap:8px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:12px; padding:10px 14px; font-size:13px; color:#334155;">
+    <!-- Filled dynamically by js/survey.js -->
+  </div>
+  <section class="card" style="margin-bottom:15px">
+    <!-- 1. ผู้ตอบแบบสอบถาม (Respondent Type) - Now at the VERY TOP -->
+    <div class="field" style="margin-bottom:15px">
+      <label for="respondent-type" style="font-weight:750; color:var(--brand); display:flex; align-items:center; gap:5px">
+        <svg class="pvt-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>1. ผู้ตอบแบบสอบถาม (กลุ่มเป้าหมาย)</span>
+      </label>
+      <select id="respondent-type" class="select" style="border: 2px solid var(--brand); font-weight: 600;">
+        <option value="">-- กรุณาเลือกกลุ่มเป้าหมาย --</option>
+        <option value="dealer">Dealer / ร้านค้าตัวแทนจำหน่าย</option>
+        <option value="farmer">เกษตรกร / ผู้ใช้จริง</option>
+      </select>
+    </div>
+
+    <!-- 2. กลุ่มฟิลด์สำหรับ ร้านค้า (Dealer / ร้านค้า) -->
+    <div id="dealer-fields-container" class="hidden">
+      <div class="grid grid-2" style="margin-bottom:12px">
+        <div class="field">
+          <label for="province-filter">จังหวัด (กรองตามพื้นที่)</label>
+          <select id="province-filter" class="select"></select>
+        </div>
+        <div class="field">
+          <label for="customer-search">ค้นหาชื่อร้าน / รหัสร้านค้า</label>
+          <input id="customer-search" class="input" placeholder="พิมพ์ชื่อร้าน หรือ รหัส เพื่อค้นหา...">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <label for="customer-select" style="margin-bottom:0">ชื่อร้านค้า (ที่รับผิดชอบ)</label>
+          <span id="customer-count-badge" class="small muted"></span>
+        </div>
+        <select id="customer-select" class="select"></select>
+      </div>
+    </div>
+
+    <!-- 3. กลุ่มฟิลด์สำหรับ เกษตรกร (Farmer) -->
+    <div id="farmer-fields-container" class="hidden" style="margin-bottom:12px">
+      <div class="field">
+        <label for="farmer-province">จังหวัดที่ตั้งกลุ่ม/ที่อยู่เกษตรกร</label>
+        <select id="farmer-province" class="select"></select>
+      </div>
+    </div>
+
+    <!-- 4. ฟิลด์ทั่วไป: สินค้า และชื่อผู้ให้ข้อมูล -->
+    <div class="grid grid-2" id="general-fields-container">
+      <div class="field" style="display: none">
+        <select id="campaign-select" class="select"></select>
+      </div>
+      <div class="field">
+        <label for="product-select" style="font-weight: 600;">2. เลือกสินค้า</label>
+        <select id="product-select" class="select"></select>
+      </div>
+      <div class="field">
+        <label for="respondent-name">ชื่อผู้ให้ข้อมูล / เกษตรกร (ไม่บังคับ)</label>
+        <input id="respondent-name" class="input" placeholder="เช่น คุณสมชาย">
+      </div>
+    </div>
+    <p id="pain-point" class="notice" style="margin-bottom:0;display:none"></p>
+  </section>
+  <section id="questions-panel" class="hidden">
+    <div class="progress"><div id="progress-bar"></div></div><div id="progress-text" class="small muted" style="margin-bottom:10px"></div>
+    <div id="question-container"></div>
+    <button id="submit-survey" class="btn btn-primary" style="width:100%;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg class="pvt-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span>บันทึกแบบสอบถาม</span>
+    </button>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script><script src="js/utils.js"></script><script src="js/icons.js"></script><script src="js/supabase-client.js"></script><script src="js/campaign-questions-manager.js"></script><script src="js/auth.js"></script><script src="js/survey-renderer.js"></script><script src="js/survey.js"></script>
+</body></html>

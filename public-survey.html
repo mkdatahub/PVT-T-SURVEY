@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>แบบสอบถามความพึงพอใจและข้อเสนอแนะ — ผลิตภัณฑ์ตราต้นไม้</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body class="public-body">
+  <div class="public-survey-container">
+    
+    <!-- Top Friendly Header Card -->
+    <header id="public-header-card" class="public-header-card">
+      <div class="public-header-stripe"></div>
+      <div class="public-header-content">
+        <div class="public-brand-row">
+          <div class="brand-mark" style="width:46px;height:46px;background:#f8fafc;padding:6px;display:grid;place-items:center">
+            <img src="icon-192.png" alt="Logo" style="width:34px;height:34px;object-fit:contain" referrerPolicy="no-referrer">
+          </div>
+          <div>
+            <div class="public-brand-title">ผลิตภัณฑ์พลาสติกการเกษตร ตราต้นไม้</div>
+            <div class="public-brand-sub">บริษัท พี.วี.ที. & ที พลาส จำกัด (P.V.T. & T Plas Co., Ltd.)</div>
+          </div>
+        </div>
+
+        <h1 class="public-survey-title">แบบสอบถามความพึงพอใจและข้อเสนอแนะร้านค้าตัวแทนจำหน่าย</h1>
+        <div id="public-campaign-badge" style="margin-bottom:10px;display:none"></div>
+        <p class="public-survey-desc">
+          ขอขอบพระคุณท่านร้านค้าที่ให้ความไว้วางใจเลือกใช้และจัดจำหน่ายผลิตภัณฑ์ “ตราต้นไม้” เสมอมา<br>
+          แบบสอบถามนี้จัดทำขึ้นเพื่อรับฟังความคิดเห็นและข้อเสนอแนะอันมีค่าของท่าน เพื่อนำไปพัฒนาคุณภาพสินค้าและการบริการให้ดียิ่งขึ้น 
+          <span style="display:inline-flex;align-items:center;gap:4px;color:var(--brand);font-weight:700">
+            <svg class="pvt-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>ใช้เวลาประมาณ 2–3 นาที</span>
+          </span>
+        </p>
+      </div>
+    </header>
+
+    <!-- Root Container for Survey -->
+    <main id="public-root">
+      
+      <!-- Loading State -->
+      <div id="public-loading" class="card public-card" style="text-align:center;padding:36px">
+        <div style="margin-bottom:12px;color:var(--brand)">
+          <svg class="pvt-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div style="font-weight:700;font-size:16px">กำลังเตรียมแบบสอบถาม...</div>
+        <div class="muted small" style="margin-top:4px">กรุณารอสักครู่</div>
+      </div>
+
+      <!-- Main Survey Content -->
+      <div id="public-content" class="hidden">
+        
+        <!-- Section 1: Customer / Store Info -->
+        <section class="card public-card">
+          <div class="public-card-header">
+            <span class="public-step-badge">ตอนที่ 1</span>
+            <div>
+              <h2 class="public-card-title">ข้อมูลร้านค้า / ผู้ให้ข้อมูล</h2>
+              <div class="public-card-subtitle">เพื่อช่วยให้ทีมงานเข้าใจบริบทและข้อเสนอแนะของท่านได้ตรงจุด</div>
+            </div>
+          </div>
+
+          <!-- Salesperson Referral Badge if link has salesperson tracking -->
+          <div id="salesperson-referral-box" class="hidden" style="background:#f0f7f3;border:1.5px solid #bce1cc;border-radius:12px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+            <div style="width:30px;height:30px;border-radius:50%;background:#e0f1e7;color:var(--brand);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg class="pvt-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+            </div>
+            <div style="font-size:13px;color:#0e3c26">
+              <span>ผู้แทนขายที่ดูแลร้านค้าของท่าน:</span> <strong id="salesperson-referral-name" style="color:var(--brand)">ฝ่ายขายตราต้นไม้</strong>
+            </div>
+          </div>
+
+          <!-- If coming with Token (Verified Customer) -->
+          <div id="token-shop-box" class="hidden" style="background:#edf8f2;border:1.5px solid #c2e2d0;border-radius:14px;padding:16px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span class="pill success" style="font-size:11px">ร้านค้าตัวแทนจำหน่ายที่ระบุ</span>
+            </div>
+            <h3 id="token-shop-name" style="margin:2px 0 4px;font-size:18px;color:#0e3c26"></h3>
+            <div id="token-shop-meta" class="muted small"></div>
+          </div>
+
+          <!-- If Direct / Open Survey (No Token) -->
+          <div id="open-shop-box">
+            <div class="field" style="margin-bottom:14px">
+              <label for="shop-search-input">ชื่อร้านค้าของท่าน <span style="color:#c02619">*</span></label>
+              <input id="shop-search-input" type="text" class="input" placeholder="ระบุชื่อร้านค้าของท่าน" autocomplete="off">
+            </div>
+
+            <div class="grid grid-2" style="margin-bottom:14px">
+              <div class="field">
+                <label for="shop-province-input">จังหวัดที่ตั้งร้านค้า <span style="color:#c02619">*</span></label>
+                <input id="shop-province-input" class="input" placeholder="เช่น เชียงใหม่, นครราชสีมา" required>
+              </div>
+              <div class="field">
+                <label for="shop-respondent-name">ชื่อผู้ให้ข้อมูล (ไม่บังคับ)</label>
+                <input id="shop-respondent-name" class="input" placeholder="เช่น คุณสมชาย (เจ้าของร้าน)">
+              </div>
+            </div>
+          </div>
+
+          <div id="token-respondent-box" class="field hidden" style="margin-top:10px">
+            <label for="public-respondent-name">ชื่อผู้ให้ข้อมูล (ไม่บังคับ)</label>
+            <input id="public-respondent-name" class="input" placeholder="เช่น คุณสมชาย (เจ้าของร้าน/ผู้จัดการ)">
+          </div>
+        </section>
+
+        <!-- Section 2: Product Selection -->
+        <section class="card public-card">
+          <div class="public-card-header">
+            <span class="public-step-badge">ตอนที่ 2</span>
+            <div>
+              <h2 class="public-card-title">เลือกผลิตภัณฑ์ตราต้นไม้ที่ท่านต้องการประเมิน <span style="color:#c02619">*</span></h2>
+              <div class="public-card-subtitle">แตะหรือคลิกเลือกผลิตภัณฑ์ที่ร้านค้าของท่านจัดจำหน่าย</div>
+            </div>
+          </div>
+
+          <!-- Visual Product Selector Cards -->
+          <div id="product-cards-grid" class="public-product-grid">
+            <!-- Dynamically populated product cards -->
+          </div>
+
+          <!-- Hidden / Fallback Select -->
+          <select id="public-product" class="select hidden"></select>
+        </section>
+
+        <!-- Section 3: Questions -->
+        <section id="public-questions-panel" class="hidden">
+          
+          <!-- Sticky Progress Header -->
+          <div class="public-progress-bar-wrap">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700">
+              <span id="progress-status-text">แบบประเมินความพึงพอใจ</span>
+              <span id="progress-percent-text" style="color:var(--brand)">0%</span>
+            </div>
+            <div class="public-progress-fill">
+              <div id="public-progress-bar" class="public-progress-fill-val"></div>
+            </div>
+          </div>
+
+          <!-- Question Cards Container -->
+          <div id="public-question-container"></div>
+
+          <!-- Extra Feedback Card -->
+          <div class="card public-card">
+            <div class="public-card-header">
+              <span class="public-step-badge">ข้อเสนอแนะ</span>
+              <div>
+                <h3 class="public-card-title">ข้อเสนอแนะเพิ่มเติมสำหรับตราต้นไม้ (ถ้ามี)</h3>
+                <div class="public-card-subtitle">สิ่งที่ท่านอยากให้เราปรับปรุง พัฒนา หรือบริการที่ต้องการเพิ่มเติม</div>
+              </div>
+            </div>
+            <textarea id="public-additional-feedback" class="textarea" placeholder="พิมพ์ข้อคิดเห็นหรือข้อเสนอแนะของท่านได้ที่นี่..."></textarea>
+          </div>
+
+          <!-- Submit Action -->
+          <div class="card public-card" style="text-align:center;padding:26px">
+            <button id="public-submit" class="btn btn-primary" style="width:100%;padding:15px;font-size:16px;font-weight:800;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px">
+              <span>ส่งแบบสอบถาม (Submit Survey)</span>
+              <svg class="pvt-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+            <p class="small muted" style="margin:12px 0 0">
+              เมื่อกดส่ง ข้อมูลจะถูกบันทึกเข้าระบบทันที ขอบพระคุณสำหรับความร่วมมือครับ
+            </p>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- Public Footer -->
+    <footer class="public-footer">
+      <p>© 2026 บริษัท พี.วี.ที. & ที พลาส จำกัด (P.V.T. & T Plas Co., Ltd.) • คุณภาพตราต้นไม้คู่เกษตรกรไทย</p>
+      <div style="margin-top:6px">
+        <a href="index.html" class="muted small" style="text-decoration:none">เข้าสู่ระบบสำหรับทีมงาน (ฝ่ายขาย & ผู้บริหาร) →</a>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/campaign-questions-manager.js"></script>
+  <script src="js/survey-renderer.js"></script>
+  <script src="js/public-survey.js"></script>
+</body>
+</html>
