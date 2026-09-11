@@ -16,6 +16,7 @@ export default defineConfig({
           
           const routes = {
             '/login': '/index.html',
+            '/admin-login': '/admin-login.html',
             '/sales': '/sales.html',
             '/admin': '/admin.html',
             '/survey': '/survey.html',
@@ -34,6 +35,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        adminLogin: resolve(__dirname, 'admin-login.html'),
         admin: resolve(__dirname, 'admin.html'),
         sales: resolve(__dirname, 'sales.html'),
         survey: resolve(__dirname, 'survey.html'),

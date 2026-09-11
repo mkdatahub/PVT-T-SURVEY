@@ -109,7 +109,9 @@ PVT.requireAuth = async (roles=[]) => {
   if (!PVT.db) return null;
   const ctx = await PVT.getSessionProfile();
   if (!ctx) {
-    location.href = `index.html?next=${encodeURIComponent(location.pathname.split("/").pop()+location.search)}`;
+    const isOnlyAdmin = roles.length && roles.every(r => r === "admin" || r === "management");
+    const targetLogin = isOnlyAdmin ? "admin-login.html" : "index.html";
+    location.href = `${targetLogin}?next=${encodeURIComponent(location.pathname.split("/").pop()+location.search)}`;
     return null;
   }
   if (roles.length && !roles.includes(ctx.profile.role)) {
@@ -121,7 +123,10 @@ PVT.requireAuth = async (roles=[]) => {
   return ctx;
 };
 
-PVT.logout = async () => {
+PVT.logout = async (redirectTarget) => {
+  const currentCtx = await PVT.getSessionProfile();
+  const isAdmin = currentCtx?.profile?.role === "admin" || currentCtx?.profile?.role === "management" || location.pathname.includes("admin.html");
+  
   PVT.clearSalesSession();
   PVT.clearAdminSession();
   if (PVT.db && PVT.db.auth) {
@@ -129,7 +134,14 @@ PVT.logout = async () => {
       await PVT.db.auth.signOut();
     } catch (e) {}
   }
-  location.href="index.html";
+  
+  if (redirectTarget) {
+    location.href = redirectTarget;
+  } else if (isAdmin) {
+    location.href = "admin-login.html";
+  } else {
+    location.href = "index.html";
+  }
 };
 
 document.addEventListener("click",e=>{

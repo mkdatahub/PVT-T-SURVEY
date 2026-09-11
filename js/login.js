@@ -14,17 +14,42 @@ document.addEventListener("DOMContentLoaded", async () => {
   PVT.requireConfigured();
   if (!PVT.db) return;
 
+  const isCurrentAdminPage = location.pathname.includes("admin-login");
+
   // If already logged in, redirect right away
   const ctx = await PVT.getSessionProfile();
   if (ctx) {
-    location.href = ctx.profile.role === "sales" ? "survey.html" : "admin.html";
-    return;
+    if (ctx.profile.role === "sales") {
+      // If sales visits admin-login, stay or redirect if explicitly requested
+      if (!isCurrentAdminPage) {
+        location.href = "survey.html";
+        return;
+      }
+    } else if (ctx.profile.role === "admin" || ctx.profile.role === "management") {
+      location.href = "admin.html";
+      return;
+    }
   }
 
   setupTabs();
   await initSalesLogin();
   setupAdminLogin();
+  setupPasswordToggle();
 });
+
+function setupPasswordToggle() {
+  const toggleBtn = document.getElementById("toggle-pwd-btn");
+  const pwdInput = document.getElementById("password");
+  if (!toggleBtn || !pwdInput) return;
+
+  toggleBtn.addEventListener("click", () => {
+    const isPassword = pwdInput.getAttribute("type") === "password";
+    pwdInput.setAttribute("type", isPassword ? "text" : "password");
+    toggleBtn.innerHTML = isPassword
+      ? `<svg class="pvt-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`
+      : `<svg class="pvt-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  });
+}
 
 function setupTabs() {
   const tabs = document.querySelectorAll(".login-tabs .tab-btn");
@@ -42,6 +67,8 @@ function setupTabs() {
 
 async function initSalesLogin() {
   const select = document.getElementById("salesperson-select");
+  if (!select) return;
+
   const chipsContainer = document.getElementById("sales-chips");
   const customField = document.getElementById("custom-name-field");
   const customInput = document.getElementById("custom-name-input");
@@ -81,8 +108,8 @@ async function initSalesLogin() {
         chipsContainer.querySelectorAll(".sales-chip").forEach(c => c.classList.remove("active"));
         chip.classList.add("active");
         select.value = chip.dataset.id;
-        customField.classList.add("hidden");
-        customInput.required = false;
+        if (customField) customField.classList.add("hidden");
+        if (customInput) customInput.required = false;
       });
     });
   }
@@ -96,12 +123,14 @@ async function initSalesLogin() {
       });
     }
     if (val === "__custom__") {
-      customField.classList.remove("hidden");
-      customInput.required = true;
-      customInput.focus();
+      if (customField) customField.classList.remove("hidden");
+      if (customInput) {
+        customInput.required = true;
+        customInput.focus();
+      }
     } else {
-      customField.classList.add("hidden");
-      customInput.required = false;
+      if (customField) customField.classList.add("hidden");
+      if (customInput) customInput.required = false;
     }
   });
 
@@ -114,6 +143,8 @@ async function initSalesLogin() {
       if (matchingChip) matchingChip.classList.add("active");
     }
   }
+
+  if (!form) return;
 
   // Handle sales login submission (No password needed!)
   form.addEventListener("submit", async (e) => {
@@ -130,10 +161,10 @@ async function initSalesLogin() {
     let displayName = "";
 
     if (val === "__custom__") {
-      displayName = customInput.value.trim();
+      displayName = customInput ? customInput.value.trim() : "";
       if (!displayName) {
         PVT.toast("กรุณาพิมพ์ชื่อของท่าน", "warning");
-        customInput.focus();
+        if (customInput) customInput.focus();
         return;
       }
       // Check if custom typed name matches any known salesperson
@@ -260,3 +291,4 @@ function setupAdminLogin() {
     }
   });
 }
+
