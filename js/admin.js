@@ -1730,7 +1730,8 @@ async function createCampaign(e){
     const endDate = document.getElementById("campaign-end").value || null;
     const isActive = document.getElementById("campaign-active").checked;
 
-    const createdBy = ADMIN_CTX?.session?.user?.id || (PVT.isUuid(ADMIN_CTX?.profile?.auth_user_id) ? ADMIN_CTX.profile.auth_user_id : null);
+    // Only set created_by if logged in via real Supabase Auth session user
+    const realAuthUserId = ADMIN_CTX?.session?.user?.id || null;
 
     const payload = {
       name: name,
@@ -1739,25 +1740,46 @@ async function createCampaign(e){
       is_active: isActive
     };
 
-    if (createdBy) {
-      payload.created_by = createdBy;
+    if (realAuthUserId) {
+      payload.created_by = realAuthUserId;
     }
 
-    const {data, error}=await PVT.db.from("survey_campaigns").insert(payload).select();
-    if(error)throw error;
+    let data = null;
+    let error = null;
+
+    if (PVT.db) {
+      const res = await PVT.db.from("survey_campaigns").insert(payload).select();
+      data = res.data;
+      error = res.error;
+
+      // If foreign key constraint on created_by occurs, retry without created_by
+      if (error && (error.code === "23503" || (error.message && error.message.includes("foreign key")))) {
+        console.warn("Retrying survey_campaigns insert without created_by...");
+        delete payload.created_by;
+        const retryRes = await PVT.db.from("survey_campaigns").insert(payload).select();
+        data = retryRes.data;
+        error = retryRes.error;
+      }
+    }
+
+    if (error) throw error;
 
     e.target.reset();await loadAdminData();renderAll();
     const createdId = data && data[0]?.id;
     PVT.toast("สร้าง Campaign แล้ว! กดปุ่ม 'จัดการคำถาม' เพื่อปรับแต่งคำถามได้ทันที", "success");
     if (createdId && typeof PVT.openCampaignQuestionModal === "function") {
-      // Prompt user if they want to customize questions now
       setTimeout(() => {
         if (confirm(`สร้าง Campaign สำเร็จ! ต้องการตั้งค่าหรือปรับแต่งคำถามเฉพาะสำหรับ Campaign นี้ตอนนี้เลยหรือไม่?`)) {
           PVT.openCampaignQuestionModal(createdId);
         }
       }, 300);
     }
-  }catch(err){PVT.toast(err.message || "เกิดข้อผิดพลาดในการสร้าง Campaign","error");}finally{PVT.setBusy(btn,false);}
+  }catch(err){
+    console.error("Error creating campaign:", err);
+    PVT.toast(err.message || "เกิดข้อผิดพลาดในการสร้าง Campaign","error");
+  }finally{
+    PVT.setBusy(btn,false);
+  }
 }
 async function toggleCampaign(id,value){
   const {error}=await PVT.db.from("survey_campaigns").update({is_active:value}).eq("id",id);
