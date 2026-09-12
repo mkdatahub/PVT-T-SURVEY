@@ -131,6 +131,32 @@ PVT.toValidUuid = (val) => {
   return `00000000-0000-4000-8000-${hex}`;
 };
 
+PVT.ensureQuestionsExistInDb = async (questions, productId = null, respondentType = "dealer") => {
+  if (!PVT.db || !questions || !Array.isArray(questions) || !questions.length) return;
+  try {
+    const rows = questions.map((q, idx) => {
+      const validId = PVT.toValidUuid(q.id);
+      let qType = (q.question_type || "checkbox").toLowerCase();
+      if (!["checkbox", "rating_grid", "single_choice", "scale", "text"].includes(qType)) {
+        qType = "checkbox";
+      }
+      return {
+        id: validId,
+        product_id: PVT.isUuid(productId) ? productId : (PVT.isUuid(q.product_id) ? q.product_id : "22903454-9bc7-5025-a316-8050c7704a17"),
+        respondent_type: (respondentType === "farmer" || respondentType === "dealer") ? respondentType : "dealer",
+        question_no: q.question_no || (idx + 1),
+        question_type: qType,
+        prompt: q.prompt || `คำถามที่ ${idx + 1}`,
+        required: q.required !== false,
+        sort_order: q.sort_order || (idx + 1)
+      };
+    });
+    await PVT.db.from("survey_questions").upsert(rows, { onConflict: "id", ignoreDuplicates: true });
+  } catch (e) {
+    console.warn("Notice ensuring survey questions in DB:", e);
+  }
+};
+
 PVT.normalizeCustomer = (c) => {
   if (!c) return null;
   const client_name = (c.client_name || c.shop_name || "").trim();

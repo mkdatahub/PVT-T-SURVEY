@@ -448,10 +448,22 @@ async function submitPublicSurvey() {
   const token = PVT.params().get("token");
 
   try {
-    const cleanPublicAnswers = answers.filter(a => a.question_id !== "feedback-extra").map(a => ({
-      ...a,
-      question_id: PVT.toValidUuid(a.question_id)
-    }));
+    if (typeof PVT.ensureQuestionsExistInDb === "function") {
+      await PVT.ensureQuestionsExistInDb(PUBLIC_QUESTIONS || [], productId, "dealer");
+    }
+
+    const answerMap = new Map();
+    for (const a of (answers || [])) {
+      if (a.question_id === "feedback-extra") continue;
+      const qUuid = PVT.toValidUuid(a.question_id);
+      if (!answerMap.has(qUuid)) {
+        answerMap.set(qUuid, {
+          question_id: qUuid,
+          answer: a.answer
+        });
+      }
+    }
+    const cleanPublicAnswers = Array.from(answerMap.values());
 
     if (token) {
       // Try token RPC submission first
@@ -525,11 +537,14 @@ async function submitPublicSurvey() {
         // Insert answers
         const answerRows = cleanPublicAnswers.map(a => ({
           response_id: responseId,
-          question_id: PVT.toValidUuid(a.question_id),
+          question_id: a.question_id,
           answer_json: a.answer
         }));
         if (answerRows.length) {
-          await PVT.db.from("survey_answers").insert(answerRows);
+          const { error: ansErr } = await PVT.db.from("survey_answers").upsert(answerRows, { onConflict: "response_id,question_id" });
+          if (ansErr) {
+            console.warn("Notice upserting public survey_answers:", ansErr.message || ansErr);
+          }
         }
         insertedToDb = true;
         submittedSuccessfully = true;

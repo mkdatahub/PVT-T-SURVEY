@@ -752,11 +752,23 @@ async function submitSurvey() {
     const respondentNameVal = document.getElementById("respondent-name").value.trim() || null;
     const nowIso = new Date().toISOString();
 
-    // Ensure all answer question_ids are valid UUID syntax for PostgreSQL
-    const sanitizedAnswers = (answers || []).map(a => ({
-      ...a,
-      question_id: PVT.toValidUuid(a.question_id)
-    }));
+    // Ensure questions exist in survey_questions table so foreign keys in survey_answers are valid
+    if (typeof PVT.ensureQuestionsExistInDb === "function") {
+      await PVT.ensureQuestionsExistInDb(QUESTIONS || [], productId, respondentType);
+    }
+
+    // Deduplicate answers by question_id and ensure valid UUID syntax for PostgreSQL
+    const answerMap = new Map();
+    for (const a of (answers || [])) {
+      const qUuid = PVT.toValidUuid(a.question_id);
+      if (!answerMap.has(qUuid)) {
+        answerMap.set(qUuid, {
+          question_id: qUuid,
+          answer: a.answer
+        });
+      }
+    }
+    const sanitizedAnswers = Array.from(answerMap.values());
 
     // 2. Submit survey via database RPC function (security definer handles customer & campaign automatically)
     try {
@@ -812,7 +824,10 @@ async function submitSurvey() {
             answer_json: item.answer
           }));
           if (answerRows.length) {
-            await PVT.db.from("survey_answers").insert(answerRows);
+            const { error: ansErr } = await PVT.db.from("survey_answers").upsert(answerRows, { onConflict: "response_id,question_id" });
+            if (ansErr) {
+              console.warn("Notice upserting survey_answers:", ansErr.message || ansErr);
+            }
           }
         }
       } catch (insErr) {
