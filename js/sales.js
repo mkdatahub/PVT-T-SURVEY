@@ -72,15 +72,12 @@ async function loadCustomers(){
   let loaded = [];
   try {
     let query = PVT.db.from("customers").select("*");
-    if (SALES_CTX?.profile?.role === "sales" && SALES_CTX.profile.salesperson_id && PVT.isUuid(SALES_CTX.profile.salesperson_id)) {
-      query = query.eq("salesperson_id", SALES_CTX.profile.salesperson_id);
-    }
     const {data,error}=await query;
     if(!error && data && data.length){
       loaded = data;
     }
 
-    // Try query shops table as well
+    // Query shops table as well
     const { data: sData, error: sErr } = await PVT.db.from("shops").select("*");
     if (!sErr && sData && sData.length) {
       loaded = [...loaded, ...sData];
@@ -89,32 +86,39 @@ async function loadCustomers(){
     console.warn("Database customer query notice:", e);
   }
 
-  // Fallback to customer seed list with real valid UUIDs
-  if(!loaded.length){
-    try{
-      const seedList = await PVT.getSeedCustomers();
-      if(seedList && seedList.length){
-        const myName = (SALES_CTX?.profile?.display_name||"").trim();
-        const myId = SALES_CTX?.profile?.salesperson_id;
-
-        if (SALES_CTX?.profile?.role === "sales" && myName && myName !== "บริษัท") {
-          if (myId && PVT.isUuid(myId)) {
-            loaded = seedList.filter(r => r.salesperson_id === myId);
-          }
-          if (!loaded.length) {
-            loaded = seedList.filter(r => r.employee_name && (r.employee_name.includes(myName) || myName.includes(r.employee_name)));
-          }
-          if (!loaded.length) loaded = seedList;
-        } else {
-          loaded = seedList;
-        }
-      }
-    }catch(seedErr){
-      console.warn("Could not load seed customers:", seedErr);
+  // Always merge with seed list for full coverage
+  try {
+    const seedList = await PVT.getSeedCustomers();
+    if (seedList && seedList.length) {
+      loaded = [...loaded, ...seedList];
     }
+  } catch (seedErr) {
+    console.warn("Could not load seed customers:", seedErr);
   }
 
-  CUSTOMERS = PVT.dedupeCustomers(loaded);
+  // Deduplicate first
+  let allClean = PVT.dedupeCustomers(loaded);
+
+  // Filter by sales profile if logged in as salesperson
+  const myName = (SALES_CTX?.profile?.display_name || "").trim();
+  const myId = SALES_CTX?.profile?.salesperson_id;
+
+  if (SALES_CTX?.profile?.role === "sales" && myName && myName !== "บริษัท") {
+    let filtered = [];
+    if (myId && PVT.isUuid(myId)) {
+      filtered = allClean.filter(r => r.salesperson_id === myId || r.sale_id === myId);
+    }
+    if (!filtered.length && myName) {
+      filtered = allClean.filter(r => r.employee_name && (r.employee_name.includes(myName) || myName.includes(r.employee_name)));
+    }
+    CUSTOMERS = filtered.length ? filtered : allClean;
+  } else {
+    CUSTOMERS = allClean;
+  }
+
+  // Sort alphabetically
+  CUSTOMERS.sort((a, b) => (a.client_name || "").localeCompare(b.client_name || "", "th"));
+
   const provinces=[...new Set(CUSTOMERS.map(c=>c.province_normalized||c.province_raw).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"th"));
   const pSel = document.getElementById("province-filter");
   if (pSel) {

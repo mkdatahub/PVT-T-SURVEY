@@ -112,27 +112,80 @@ PVT.normalizeCustomer = (c) => {
   return {
     ...c,
     client_name: client_name || "ร้านค้า",
+    shop_name: client_name || "ร้านค้า",
     client_id: client_id || "-",
+    shop_code: client_id || "-",
     province_raw: province || "-",
     province_normalized: province || "-",
-    salesperson_id: salesperson_id
+    salesperson_id: salesperson_id,
+    sale_id: salesperson_id
   };
 };
 
 PVT.dedupeCustomers = (list) => {
   if (!Array.isArray(list)) return [];
-  const map = new Map();
+  const keyToItem = new Map();
+  const resultList = [];
+  const normStr = (s) => (s || "").replace(/[\u00a0\s]+/g, "").toLowerCase().trim();
+
   list.forEach(item => {
     if (!item) return;
-    const normalized = PVT.normalizeCustomer(item);
-    const key = normalized.id || `${normalized.client_name}_${normalized.province_normalized}`;
-    if (!map.has(key)) {
-      map.set(key, normalized);
+    const norm = PVT.normalizeCustomer(item);
+    if (!norm) return;
+
+    const code = normStr(norm.client_id || norm.shop_code).toUpperCase();
+    const cleanName = normStr(norm.client_name || norm.shop_name).replace(/\/[a-z0-9ก-ฮ]+/g, "");
+    const prov = normStr(norm.province_normalized || norm.province_raw || norm.province);
+
+    const keys = [];
+    if (code && code !== "-" && code !== "N/A") {
+      keys.push(`CODE:${code}`);
+    }
+    if (cleanName) {
+      keys.push(`NAME:${cleanName}|PROV:${prov}`);
+    }
+    if (norm.id && PVT.isUuid(norm.id)) {
+      keys.push(`UUID:${norm.id.toLowerCase()}`);
+    }
+
+    let existing = null;
+    for (const k of keys) {
+      if (keyToItem.has(k)) {
+        existing = keyToItem.get(k);
+        break;
+      }
+    }
+
+    if (existing) {
+      // Merge properties safely
+      if (!PVT.isUuid(existing.id) && PVT.isUuid(norm.id)) {
+        existing.id = norm.id;
+      }
+      if (!existing.salesperson_id && norm.salesperson_id) {
+        existing.salesperson_id = norm.salesperson_id;
+        existing.sale_id = norm.salesperson_id;
+      }
+      if ((!existing.client_id || existing.client_id === "-") && norm.client_id && norm.client_id !== "-") {
+        existing.client_id = norm.client_id;
+        existing.shop_code = norm.client_id;
+      }
+      if (norm.client_name && norm.client_name !== "ร้านค้า" && norm.client_name.length > (existing.client_name || "").length) {
+        existing.client_name = norm.client_name;
+        existing.shop_name = norm.client_name;
+      }
+      if ((!existing.province_normalized || existing.province_normalized === "-") && norm.province_normalized) {
+        existing.province_raw = norm.province_normalized;
+        existing.province_normalized = norm.province_normalized;
+      }
+      keys.forEach(k => keyToItem.set(k, existing));
     } else {
-      map.set(key, { ...map.get(key), ...normalized });
+      const newObj = { ...norm };
+      resultList.push(newObj);
+      keys.forEach(k => keyToItem.set(k, newObj));
     }
   });
-  return Array.from(map.values());
+
+  return resultList;
 };
 
 PVT._seedCustomersCache = null;

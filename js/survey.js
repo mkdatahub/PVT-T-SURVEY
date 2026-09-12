@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Filter by salesperson if logged in as sales
     const mySalesId = SURVEY_CTX?.profile?.salesperson_id;
     if (SURVEY_CTX?.profile?.role === "sales" && mySalesId) {
-      MY_CUSTOMERS = allCustomers.filter(c => c.salesperson_id === mySalesId);
+      MY_CUSTOMERS = allCustomers.filter(c => c.salesperson_id === mySalesId || c.sale_id === mySalesId);
       if (!MY_CUSTOMERS.length) {
         MY_CUSTOMERS = allCustomers;
       }
