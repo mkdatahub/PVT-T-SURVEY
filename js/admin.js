@@ -1720,11 +1720,32 @@ function renderCampaigns(){
   });
 }
 async function createCampaign(e){
-  e.preventDefault(); if(ADMIN_CTX.profile.role!=="admin")return;
+  e.preventDefault(); if(ADMIN_CTX?.profile?.role!=="admin")return;
   const btn=e.submitter;PVT.setBusy(btn,true,"กำลังสร้าง...");
   try{
-    const payload={name:document.getElementById("campaign-name-input").value.trim(),start_date:document.getElementById("campaign-start").value,end_date:document.getElementById("campaign-end").value,is_active:document.getElementById("campaign-active").checked,created_by:ADMIN_CTX.session.user.id};
-    const {data, error}=await PVT.db.from("survey_campaigns").insert(payload).select();if(error)throw error;
+    const name = document.getElementById("campaign-name-input").value.trim();
+    if (!name) throw new Error("กรุณาระบุชื่อ Campaign");
+
+    const startDate = document.getElementById("campaign-start").value || null;
+    const endDate = document.getElementById("campaign-end").value || null;
+    const isActive = document.getElementById("campaign-active").checked;
+
+    const createdBy = ADMIN_CTX?.session?.user?.id || (PVT.isUuid(ADMIN_CTX?.profile?.auth_user_id) ? ADMIN_CTX.profile.auth_user_id : null);
+
+    const payload = {
+      name: name,
+      start_date: startDate,
+      end_date: endDate,
+      is_active: isActive
+    };
+
+    if (createdBy) {
+      payload.created_by = createdBy;
+    }
+
+    const {data, error}=await PVT.db.from("survey_campaigns").insert(payload).select();
+    if(error)throw error;
+
     e.target.reset();await loadAdminData();renderAll();
     const createdId = data && data[0]?.id;
     PVT.toast("สร้าง Campaign แล้ว! กดปุ่ม 'จัดการคำถาม' เพื่อปรับแต่งคำถามได้ทันที", "success");
@@ -1736,7 +1757,7 @@ async function createCampaign(e){
         }
       }, 300);
     }
-  }catch(err){PVT.toast(err.message,"error");}finally{PVT.setBusy(btn,false);}
+  }catch(err){PVT.toast(err.message || "เกิดข้อผิดพลาดในการสร้าง Campaign","error");}finally{PVT.setBusy(btn,false);}
 }
 async function toggleCampaign(id,value){
   const {error}=await PVT.db.from("survey_campaigns").update({is_active:value}).eq("id",id);
