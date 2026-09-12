@@ -76,12 +76,6 @@ async function loadCustomers(){
     if(!error && data && data.length){
       loaded = data;
     }
-
-    // Query shops table as well
-    const { data: sData, error: sErr } = await PVT.db.from("shops").select("*");
-    if (!sErr && sData && sData.length) {
-      loaded = [...loaded, ...sData];
-    }
   } catch(e) {
     console.warn("Database customer query notice:", e);
   }

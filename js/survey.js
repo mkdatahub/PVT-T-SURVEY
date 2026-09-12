@@ -99,11 +99,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const { data: cData, error: cErr } = await PVT.db.from("customers").select("*");
       if (!cErr && cData && cData.length) dbList = cData;
-
-      const { data: sData, error: sErr } = await PVT.db.from("shops").select("*");
-      if (!sErr && sData && sData.length) {
-        dbList = [...dbList, ...sData];
-      }
     } catch (e) {
       console.warn("DB customer query notice:", e);
     }
