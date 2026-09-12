@@ -246,6 +246,9 @@ async function loadAdminData(){
   ]);
 
   A_CAMPAIGNS = (campsRes.status === "fulfilled" && campsRes.value?.data) || [];
+  if (A_CAMPAIGNS.length > 0) {
+    PVT.hasCustomQuestionsCol = Object.prototype.hasOwnProperty.call(A_CAMPAIGNS[0], "custom_questions");
+  }
   A_PRODUCTS = (productsRes.status === "fulfilled" && productsRes.value?.data) || [];
   A_SALES = (salesRes.status === "fulfilled" && salesRes.value?.data) || [];
   A_PROFILES = (profilesRes.status === "fulfilled" && profilesRes.value?.data) || [];

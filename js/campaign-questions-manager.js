@@ -140,7 +140,8 @@ window.PVT = window.PVT || {};
     }
 
     // Attempt to persist to database if table/column supports it
-    if (PVT.db) {
+    const hasCol = PVT.hasCustomQuestionsCol || (window.A_CAMPAIGNS && window.A_CAMPAIGNS.length > 0 && Object.prototype.hasOwnProperty.call(window.A_CAMPAIGNS[0], "custom_questions"));
+    if (PVT.db && hasCol) {
       try {
         await PVT.db.from("survey_campaigns").update({
           custom_questions: payload.questions
@@ -168,7 +169,8 @@ window.PVT = window.PVT || {};
       if (c) c.custom_questions = null;
     }
 
-    if (PVT.db) {
+    const hasColReset = PVT.hasCustomQuestionsCol || (window.A_CAMPAIGNS && window.A_CAMPAIGNS.length > 0 && Object.prototype.hasOwnProperty.call(window.A_CAMPAIGNS[0], "custom_questions"));
+    if (PVT.db && hasColReset) {
       try {
         await PVT.db.from("survey_campaigns").update({
           custom_questions: null

@@ -1668,10 +1668,13 @@ async function createInvite(){
     if (campaignId) {
       try {
         const campObj = CAMPAIGNS.find(x => x.id === campaignId);
+        const startDate = campObj?.start_date || new Date().toISOString().split("T")[0];
+        const endDate = campObj?.end_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
         await PVT.db.from("survey_campaigns").upsert({
           id: campaignId,
           name: campObj ? campObj.name : "สำรวจความพึงพอใจและคุณค่าตราต้นไม้ 2026",
-          start_date: new Date().toISOString().split("T")[0],
+          start_date: startDate,
+          end_date: endDate,
           is_active: true
         }, { onConflict: "id", ignoreDuplicates: true });
       } catch (upsertCampErr) {
