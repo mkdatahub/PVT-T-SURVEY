@@ -1449,6 +1449,7 @@ function renderQuestionInsights(rows){
     const qAnswers = relevantAnswers.filter(a => {
       if (a.question_id === q.id) return true;
       if (a.question_id && (a.question_id === `std_q${qNo}_dealer` || a.question_id === `std_q${qNo}_farmer` || a.question_id === `q${qNo}`)) return true;
+      if (a.question_id && (a.question_id === PVT.toValidUuid(`std_q${qNo}_dealer`) || a.question_id === PVT.toValidUuid(`std_q${qNo}_farmer`))) return true;
       const dbQ = A_QUESTIONS.find(x => x.id === a.question_id);
       if (dbQ && (dbQ.question_no === qNo || dbQ.sort_order === qNo)) return true;
       return false;

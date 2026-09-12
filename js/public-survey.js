@@ -448,14 +448,19 @@ async function submitPublicSurvey() {
   const token = PVT.params().get("token");
 
   try {
+    const cleanPublicAnswers = answers.filter(a => a.question_id !== "feedback-extra").map(a => ({
+      ...a,
+      question_id: PVT.toValidUuid(a.question_id)
+    }));
+
     if (token) {
       // Try token RPC submission first
       try {
         const { error } = await PVT.db.rpc("submit_public_survey", {
           p_token: token,
-          p_product_id: productId,
+          p_product_id: PVT.toValidUuid(productId),
           p_respondent_name: respondentName || storeName,
-          p_answers: answers.filter(a => a.question_id !== "feedback-extra")
+          p_answers: cleanPublicAnswers
         });
         if (!error) {
           submittedSuccessfully = true;
@@ -518,9 +523,9 @@ async function submitPublicSurvey() {
         });
 
         // Insert answers
-        const answerRows = answers.filter(a => a.question_id !== "feedback-extra").map(a => ({
+        const answerRows = cleanPublicAnswers.map(a => ({
           response_id: responseId,
-          question_id: PVT.isUuid(a.question_id) ? a.question_id : "00000000-0000-0000-0000-000000000001",
+          question_id: PVT.toValidUuid(a.question_id),
           answer_json: a.answer
         }));
         if (answerRows.length) {

@@ -752,16 +752,22 @@ async function submitSurvey() {
     const respondentNameVal = document.getElementById("respondent-name").value.trim() || null;
     const nowIso = new Date().toISOString();
 
+    // Ensure all answer question_ids are valid UUID syntax for PostgreSQL
+    const sanitizedAnswers = (answers || []).map(a => ({
+      ...a,
+      question_id: PVT.toValidUuid(a.question_id)
+    }));
+
     // 2. Submit survey via database RPC function (security definer handles customer & campaign automatically)
     try {
       const { data, error } = await PVT.db.rpc("submit_internal_survey", {
-        p_campaign_id: campaignId,
-        p_customer_id: CUSTOMER.id,
-        p_product_id: productId,
+        p_campaign_id: PVT.toValidUuid(campaignId),
+        p_customer_id: PVT.toValidUuid(CUSTOMER.id),
+        p_product_id: PVT.toValidUuid(productId),
         p_respondent_type: respondentType,
         p_respondent_name: respondentNameVal,
-        p_answers: answers,
-        p_salesperson_id: mySalesId,
+        p_answers: sanitizedAnswers,
+        p_salesperson_id: PVT.toValidUuid(mySalesId),
         p_customer_name: CUSTOMER.client_name,
         p_province: CUSTOMER.province_raw || ""
       });
@@ -786,10 +792,10 @@ async function submitSurvey() {
     if (!responseId) {
       try {
         const { data: resRow, error: insErr } = await PVT.db.from("survey_responses").insert({
-          campaign_id: campaignId,
-          customer_id: CUSTOMER.id,
-          salesperson_id: mySalesId,
-          product_id: productId,
+          campaign_id: PVT.toValidUuid(campaignId),
+          customer_id: PVT.toValidUuid(CUSTOMER.id),
+          salesperson_id: PVT.toValidUuid(mySalesId),
+          product_id: PVT.toValidUuid(productId),
           respondent_type: respondentType,
           source: 'sales',
           respondent_name: respondentNameVal,
@@ -800,7 +806,7 @@ async function submitSurvey() {
           responseId = resRow.id;
           submittedToDb = true;
 
-          const answerRows = answers.map(item => ({
+          const answerRows = sanitizedAnswers.map(item => ({
             response_id: responseId,
             question_id: item.question_id,
             answer_json: item.answer

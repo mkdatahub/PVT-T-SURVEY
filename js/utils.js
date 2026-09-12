@@ -103,6 +103,34 @@ PVT.isUuid = (val) => {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
 };
 
+PVT.toValidUuid = (val) => {
+  if (!val || typeof val !== "string") return "00000000-0000-4000-8000-000000000001";
+  const trimmed = val.trim();
+  if (PVT.isUuid(trimmed)) return trimmed;
+
+  const stdMap = {
+    "std_q1_dealer": "00000000-0000-4000-8000-000000000101",
+    "std_q2_dealer": "00000000-0000-4000-8000-000000000102",
+    "std_q3_dealer": "00000000-0000-4000-8000-000000000103",
+    "std_q4_dealer": "00000000-0000-4000-8000-000000000104",
+    "std_q5_dealer": "00000000-0000-4000-8000-000000000105",
+    "std_q1_farmer": "00000000-0000-4000-8000-000000000201",
+    "std_q2_farmer": "00000000-0000-4000-8000-000000000202",
+    "std_q3_farmer": "00000000-0000-4000-8000-000000000203",
+    "std_q4_farmer": "00000000-0000-4000-8000-000000000204",
+    "std_q5_farmer": "00000000-0000-4000-8000-000000000205"
+  };
+  if (stdMap[trimmed]) return stdMap[trimmed];
+
+  let hash = 0;
+  for (let i = 0; i < trimmed.length; i++) {
+    hash = ((hash << 5) - hash) + trimmed.charCodeAt(i);
+    hash |= 0;
+  }
+  const hex = Math.abs(hash).toString(16).padStart(12, "0").slice(0, 12);
+  return `00000000-0000-4000-8000-${hex}`;
+};
+
 PVT.normalizeCustomer = (c) => {
   if (!c) return null;
   const client_name = (c.client_name || c.shop_name || "").trim();
