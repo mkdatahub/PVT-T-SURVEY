@@ -71,16 +71,19 @@ async function loadProducts(){
 async function loadCustomers(){
   let loaded = [];
   try {
-    let query = PVT.db.from("customers")
-      .select("id,client_id,client_name,province_raw,province_normalized,salesperson_id")
-      .eq("is_active",true);
-
+    let query = PVT.db.from("customers").select("*");
     if (SALES_CTX?.profile?.role === "sales" && SALES_CTX.profile.salesperson_id && PVT.isUuid(SALES_CTX.profile.salesperson_id)) {
       query = query.eq("salesperson_id", SALES_CTX.profile.salesperson_id);
     }
-    const {data,error}=await query.order("client_name");
+    const {data,error}=await query;
     if(!error && data && data.length){
       loaded = data;
+    }
+
+    // Try query shops table as well
+    const { data: sData, error: sErr } = await PVT.db.from("shops").select("*");
+    if (!sErr && sData && sData.length) {
+      loaded = [...loaded, ...sData];
     }
   } catch(e) {
     console.warn("Database customer query notice:", e);
@@ -111,7 +114,7 @@ async function loadCustomers(){
     }
   }
 
-  CUSTOMERS=loaded;
+  CUSTOMERS = PVT.dedupeCustomers(loaded);
   const provinces=[...new Set(CUSTOMERS.map(c=>c.province_normalized||c.province_raw).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"th"));
   const pSel = document.getElementById("province-filter");
   if (pSel) {

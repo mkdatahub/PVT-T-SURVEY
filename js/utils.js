@@ -103,6 +103,38 @@ PVT.isUuid = (val) => {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
 };
 
+PVT.normalizeCustomer = (c) => {
+  if (!c) return null;
+  const client_name = (c.client_name || c.shop_name || "").trim();
+  const client_id = (c.client_id || c.shop_code || "").trim();
+  const province = (c.province_normalized || c.province_raw || c.province || "").trim();
+  const salesperson_id = c.salesperson_id || c.sale_id || null;
+  return {
+    ...c,
+    client_name: client_name || "ร้านค้า",
+    client_id: client_id || "-",
+    province_raw: province || "-",
+    province_normalized: province || "-",
+    salesperson_id: salesperson_id
+  };
+};
+
+PVT.dedupeCustomers = (list) => {
+  if (!Array.isArray(list)) return [];
+  const map = new Map();
+  list.forEach(item => {
+    if (!item) return;
+    const normalized = PVT.normalizeCustomer(item);
+    const key = normalized.id || `${normalized.client_name}_${normalized.province_normalized}`;
+    if (!map.has(key)) {
+      map.set(key, normalized);
+    } else {
+      map.set(key, { ...map.get(key), ...normalized });
+    }
+  });
+  return Array.from(map.values());
+};
+
 PVT._seedCustomersCache = null;
 PVT.getSeedCustomers = async () => {
   if (PVT._seedCustomersCache && PVT._seedCustomersCache.length) {
@@ -111,7 +143,8 @@ PVT.getSeedCustomers = async () => {
   try {
     const res = await fetch("data/customers_seed.json");
     if (res.ok) {
-      PVT._seedCustomersCache = await res.json();
+      const raw = await res.json();
+      PVT._seedCustomersCache = PVT.dedupeCustomers(raw);
       return PVT._seedCustomersCache;
     }
   } catch (e) {

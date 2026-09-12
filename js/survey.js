@@ -97,20 +97,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     const seedList = await PVT.getSeedCustomers();
     let dbList = [];
     try {
-      const { data: cData, error: cErr } = await PVT.db.from("customers").select("*").order("client_name");
+      const { data: cData, error: cErr } = await PVT.db.from("customers").select("*");
       if (!cErr && cData && cData.length) dbList = cData;
+
+      const { data: sData, error: sErr } = await PVT.db.from("shops").select("*");
+      if (!sErr && sData && sData.length) {
+        dbList = [...dbList, ...sData];
+      }
     } catch (e) {
       console.warn("DB customer query notice:", e);
     }
 
-    // Merge seed & DB customers deduplicated by id or client_name
-    const allCustMap = new Map();
-    [...seedList, ...dbList].forEach(c => {
-      if (c && c.id) {
-        allCustMap.set(c.id, { ...allCustMap.get(c.id), ...c });
-      }
-    });
-    const allCustomers = Array.from(allCustMap.values());
+    // Merge seed & DB customers deduplicated safely
+    const allCustomers = PVT.dedupeCustomers([...seedList, ...dbList]);
 
     // Filter by salesperson if logged in as sales
     const mySalesId = SURVEY_CTX?.profile?.salesperson_id;

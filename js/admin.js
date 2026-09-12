@@ -307,15 +307,17 @@ async function loadAdminData(){
     }));
   }
 
-  // 4. Merge seed customers if DB customers is empty or small
+  // 4. Merge seed customers & shops table if DB customers is empty or small
   try {
     const seedCusts = await PVT.getSeedCustomers();
-    if (seedCusts && seedCusts.length) {
-      const custMap = new Map();
-      for (const s of seedCusts) custMap.set(s.id, s);
-      for (const c of A_CUSTOMERS) custMap.set(c.id, c);
-      A_CUSTOMERS = Array.from(custMap.values());
+    let shopsDb = [];
+    if (PVT.db) {
+      try {
+        const { data: sData } = await PVT.db.from("shops").select("*");
+        if (sData && sData.length) shopsDb = sData;
+      } catch (e) {}
     }
+    A_CUSTOMERS = PVT.dedupeCustomers([...A_CUSTOMERS, ...shopsDb, ...(seedCusts || [])]);
   } catch (err) {
     console.warn("Notice loading seed customers in admin:", err);
   }
